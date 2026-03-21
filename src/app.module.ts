@@ -1,10 +1,27 @@
 import { Module } from '@nestjs/common';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { PrismaModule } from './common/prisma/prisma.module';
+import { ApiKeyGuard } from './common/guards/api-key.guard';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { PlacesModule } from './places/places.module';
+import { SpacesModule } from './spaces/spaces.module';
+import { ReservationsModule } from './reservations/reservations.module';
 
 @Module({
-  imports: [],
+  imports: [PrismaModule, PlacesModule, SpacesModule, ReservationsModule],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ApiKeyGuard,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
+    },
+  ],
 })
 export class AppModule {}
