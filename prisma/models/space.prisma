@@ -2,10 +2,10 @@ model Space {
   id           String   @id @default(cuid())
   placeId      String
   place        Place    @relation(fields: [placeId], references: [id])
-  name         String
-  reference    String?
+  name         String   @db.VarChar(100)
+  reference    String?  @db.VarChar(500)
   capacity     Int
-  description  String?
+  description  String?  @db.VarChar(500)
   reservations Reservation[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

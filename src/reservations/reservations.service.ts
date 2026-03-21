@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import type { z } from 'zod';
+import type { Prisma } from '../../generated/prisma/client.js';
 import { PrismaService } from '../common/prisma/prisma.service';
-import type { CreateReservationDto } from './dto/create-reservation.dto';
+import { CreateReservationSchema } from './dto/create-reservation.dto';
 import type { UpdateReservationDto } from './dto/update-reservation.dto';
+
+type CreateReservationInput = z.infer<typeof CreateReservationSchema>;
 
 export interface PaginationOptions {
   page?: number;
@@ -12,7 +16,7 @@ export interface PaginationOptions {
 export class ReservationsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createReservationDto: CreateReservationDto) {
+  async create(createReservationDto: CreateReservationInput) {
     const { spaceId, placeId, ...rest } = createReservationDto;
     const space = await this.prisma.space.findUniqueOrThrow({
       where: { id: spaceId },
@@ -23,7 +27,7 @@ export class ReservationsService {
         ...rest,
         spaceId,
         placeId: placeId ?? space.placeId,
-      },
+      } as Prisma.ReservationUncheckedCreateInput,
       include: { space: true },
     });
   }

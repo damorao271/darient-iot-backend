@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { Prisma } from '../../generated/prisma/client.js';
 import { PrismaService } from '../common/prisma/prisma.service';
 import type { CreatePlaceDto } from './dto/create-place.dto';
 import type { UpdatePlaceDto } from './dto/update-place.dto';
@@ -9,7 +10,7 @@ export class PlacesService {
 
   create(createPlaceDto: CreatePlaceDto) {
     return this.prisma.place.create({
-      data: createPlaceDto,
+      data: createPlaceDto as Prisma.PlaceUncheckedCreateInput,
     });
   }
 
