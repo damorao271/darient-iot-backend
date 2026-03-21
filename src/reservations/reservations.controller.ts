@@ -7,12 +7,11 @@ import {
   Param,
   Delete,
   Query,
-  ParseIntPipe,
-  DefaultValuePipe,
 } from '@nestjs/common';
 import { ReservationsService } from './reservations.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
+import { PaginationQueryDto } from './dto/pagination-query.dto';
 
 @Controller('reservations')
 export class ReservationsController {
@@ -24,11 +23,8 @@ export class ReservationsController {
   }
 
   @Get()
-  findAll(
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('pageSize', new DefaultValuePipe(10), ParseIntPipe) pageSize: number,
-  ) {
-    return this.reservationsService.findAll({ page, pageSize });
+  findAll(@Query() query: PaginationQueryDto) {
+    return this.reservationsService.findAll(query);
   }
 
   @Get(':id')

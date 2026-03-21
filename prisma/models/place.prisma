@@ -1,6 +1,6 @@
 model Place {
   id        String   @id @default(cuid())
-  name      String
+  name      String   @db.VarChar(100)
   latitude  Float
   longitude Float
   spaces    Space[]

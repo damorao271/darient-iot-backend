@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { Prisma } from '../../generated/prisma/client.js';
 import { PrismaService } from '../common/prisma/prisma.service';
 import type { CreateSpaceDto } from './dto/create-space.dto';
 import type { UpdateSpaceDto } from './dto/update-space.dto';
@@ -9,7 +10,7 @@ export class SpacesService {
 
   create(createSpaceDto: CreateSpaceDto) {
     return this.prisma.space.create({
-      data: createSpaceDto,
+      data: createSpaceDto as Prisma.SpaceUncheckedCreateInput,
     });
   }
 
