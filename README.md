@@ -30,21 +30,43 @@ Built with [Nest](https://github.com/nestjs/nest) framework TypeScript.
 ## Project setup
 
 ```bash
-$ npm install
+npm install
 ```
 
-## Compile and run the project
+## Running the project
 
+### Development mode (hot reload)
+
+**With Docker:**
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+cp .env.example .env   # first time only
+docker compose up --build
 ```
+
+Starts backend + PostgreSQL. API at http://localhost:3000 — changes reflect immediately.
+
+**Locally:**
+```bash
+npm run start:dev
+```
+
+### Production mode
+
+**With Docker:** From parent `Darient/` folder: `docker compose up backend`
+
+**Locally:**
+```bash
+npm run build
+npm run start:prod
+```
+
+## Full Docker & run options
+
+See [DOCKER.md](../DOCKER.md) in the parent folder for:
+
+- Running backend and frontend separately or together
+- Switching between development and production
+- Environment variables and Docker Compose usage
 
 ## Run tests
 

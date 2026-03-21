@@ -1,0 +1,43 @@
+# Ports and variables from .env (copy .env.example to .env)
+services:
+  backend:
+    build:
+      context: .
+      target: dev
+    container_name: darient-iot-backend
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    volumes:
+      - .:/app
+      - backend_node_modules:/app/node_modules
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-darient}:${POSTGRES_PASSWORD:-darient}@db:5432/${POSTGRES_DB:-darient}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "npm install && npm run start:dev"
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    container_name: darient-iot-backend-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-darient}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-darient}
+      POSTGRES_DB: ${POSTGRES_DB:-darient}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - backend_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-darient}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  backend_node_modules:
+  backend_db_data:
