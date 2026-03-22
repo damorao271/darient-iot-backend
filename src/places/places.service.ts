@@ -12,7 +12,10 @@ export class PlacesService {
       where: { name: createPlaceDto.name },
     });
     if (existing) {
-      throw new ConflictException('A place with this name already exists');
+      throw new ConflictException({
+        message: 'A place with this name already exists',
+        errorCode: 'ERR_DUPLICATE_PLACE',
+      });
     }
 
     return this.prisma.place.create({

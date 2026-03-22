@@ -43,14 +43,20 @@ describe('PlacesController (e2e)', () => {
         .send(validPlace)
         .expect(201)
         .expect((res) => {
-          expect(res.body).toHaveProperty('id');
-          expect(res.body.name).toBe(validPlace.name);
-          expect(res.body.latitude).toBe(validPlace.latitude);
-          expect(res.body.longitude).toBe(validPlace.longitude);
-          expect(res.body).toHaveProperty('spaces');
-          expect(res.body.spaces).toEqual([]);
-          expect(res.body).toHaveProperty('createdAt');
-          expect(res.body).toHaveProperty('updatedAt');
+          expect(res.body.success).toBe(true);
+          expect(res.body.statusCode).toBe(201);
+          expect(res.body.message).toBe('Place created successfully');
+          expect(res.body).toHaveProperty('data');
+          expect(res.body.data).toHaveProperty('id');
+          expect(res.body.data.name).toBe(validPlace.name);
+          expect(res.body.data.latitude).toBe(validPlace.latitude);
+          expect(res.body.data.longitude).toBe(validPlace.longitude);
+          expect(res.body.data).toHaveProperty('spaces');
+          expect(res.body.data.spaces).toEqual([]);
+          expect(res.body.data).toHaveProperty('createdAt');
+          expect(res.body.data).toHaveProperty('updatedAt');
+          expect(res.body).toHaveProperty('timestamp');
+          expect(res.body).toHaveProperty('path');
         });
     });
 
@@ -63,7 +69,13 @@ describe('PlacesController (e2e)', () => {
           latitude: 999,
           longitude: -3.7038,
         })
-        .expect(400);
+        .expect(400)
+        .expect((res) => {
+          expect(res.body.success).toBe(false);
+          expect(res.body.statusCode).toBe(400);
+          expect(res.body).toHaveProperty('details');
+          expect(res.body).toHaveProperty('errorCode', 'ERR_VALIDATION');
+        });
     });
 
     it('should return 400 for invalid payload (missing required fields)', () => {
@@ -71,7 +83,13 @@ describe('PlacesController (e2e)', () => {
         .post('/places')
         .set('x-api-key', apiKey)
         .send({ name: 'Incomplete' })
-        .expect(400);
+        .expect(400)
+        .expect((res) => {
+          expect(res.body.success).toBe(false);
+          expect(res.body.statusCode).toBe(400);
+          expect(res.body).toHaveProperty('details');
+          expect(res.body).toHaveProperty('errorCode', 'ERR_VALIDATION');
+        });
     });
 
     it('should return 409 when place name already exists', async () => {
@@ -86,6 +104,8 @@ describe('PlacesController (e2e)', () => {
         .send(validPlace)
         .expect(409)
         .expect((res) => {
+          expect(res.body.success).toBe(false);
+          expect(res.body.statusCode).toBe(409);
           expect(res.body.message).toBe(
             'A place with this name already exists',
           );

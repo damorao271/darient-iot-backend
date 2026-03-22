@@ -9,6 +9,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiSecurity } from '@nestjs/swagger';
+import { SuccessMessage } from '../common/decorators/success-message.decorator';
 import { ReservationsService } from './reservations.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
@@ -20,21 +21,25 @@ export class ReservationsController {
   constructor(private readonly reservationsService: ReservationsService) {}
 
   @Post()
+  @SuccessMessage('Reservation created successfully', 201)
   create(@Body() createReservationDto: CreateReservationDto) {
     return this.reservationsService.create(createReservationDto);
   }
 
   @Get()
+  @SuccessMessage('Reservations retrieved successfully')
   findAll(@Query() query: PaginationQueryDto) {
     return this.reservationsService.findAll(query);
   }
 
   @Get(':id')
+  @SuccessMessage('Reservation retrieved successfully')
   findOne(@Param('id') id: string) {
     return this.reservationsService.findOne(id);
   }
 
   @Patch(':id')
+  @SuccessMessage('Reservation updated successfully')
   update(
     @Param('id') id: string,
     @Body() updateReservationDto: UpdateReservationDto,
@@ -43,6 +48,7 @@ export class ReservationsController {
   }
 
   @Delete(':id')
+  @SuccessMessage('Reservation deleted successfully')
   remove(@Param('id') id: string) {
     return this.reservationsService.remove(id);
   }

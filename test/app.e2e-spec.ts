@@ -23,6 +23,11 @@ describe('AppController (e2e)', () => {
       .get('/')
       .set('x-api-key', apiKey)
       .expect(200)
-      .expect('Hello World!');
+      .expect((res) => {
+        expect(res.body.success).toBe(true);
+        expect(res.body.statusCode).toBe(200);
+        expect(res.body.message).toBe('API is running');
+        expect(res.body.data).toBe('Hello World!');
+      });
   });
 });

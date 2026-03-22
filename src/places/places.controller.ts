@@ -15,6 +15,7 @@ import {
   ApiParam,
   ApiSecurity,
 } from '@nestjs/swagger';
+import { SuccessMessage } from '../common/decorators/success-message.decorator';
 import { PlacesService } from './places.service';
 import { CreatePlaceDto } from './dto/create-place.dto';
 import { UpdatePlaceDto } from './dto/update-place.dto';
@@ -41,6 +42,7 @@ export class PlacesController {
   @ApiResponse({ status: 201, description: 'Place successfully created' })
   @ApiResponse({ status: 400, description: 'Invalid input' })
   @ApiResponse({ status: 409, description: 'A place with this name already exists' })
+  @SuccessMessage('Place created successfully', 201)
   create(@Body() createPlaceDto: CreatePlaceDto) {
     return this.placesService.create(createPlaceDto);
   }
@@ -48,6 +50,7 @@ export class PlacesController {
   @Get()
   @ApiOperation({ summary: 'Get all places' })
   @ApiResponse({ status: 200, description: 'List of all places' })
+  @SuccessMessage('Places retrieved successfully')
   findAll() {
     return this.placesService.findAll();
   }
@@ -57,6 +60,7 @@ export class PlacesController {
   @ApiParam({ name: 'id', description: 'Place ID' })
   @ApiResponse({ status: 200, description: 'Place found' })
   @ApiResponse({ status: 404, description: 'Place not found' })
+  @SuccessMessage('Place retrieved successfully')
   findOne(@Param('id') id: string) {
     return this.placesService.findOne(id);
   }
@@ -76,6 +80,7 @@ export class PlacesController {
   })
   @ApiResponse({ status: 200, description: 'Place updated' })
   @ApiResponse({ status: 404, description: 'Place not found' })
+  @SuccessMessage('Place updated successfully')
   update(@Param('id') id: string, @Body() updatePlaceDto: UpdatePlaceDto) {
     return this.placesService.update(id, updatePlaceDto);
   }
@@ -85,6 +90,7 @@ export class PlacesController {
   @ApiParam({ name: 'id', description: 'Place ID' })
   @ApiResponse({ status: 200, description: 'Place deleted' })
   @ApiResponse({ status: 404, description: 'Place not found' })
+  @SuccessMessage('Place deleted successfully')
   remove(@Param('id') id: string) {
     return this.placesService.remove(id);
   }
