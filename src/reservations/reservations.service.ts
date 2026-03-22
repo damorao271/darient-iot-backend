@@ -13,16 +13,11 @@ import {
   utcToLocalDateString,
   utcToLocalTimeString,
 } from '../common/utils/timezone.utils';
-import { parseTimeToMinutes } from '../common/utils/time.utils';
 import { CreateReservationSchema } from './dto/create-reservation.dto';
+import type { ReservationsQuery } from './dto/reservations-query.dto';
 import type { UpdateReservationDto } from './dto/update-reservation.dto';
 
 type CreateReservationInput = z.infer<typeof CreateReservationSchema>;
-
-export interface PaginationOptions {
-  page?: number;
-  pageSize?: number;
-}
 
 const MAX_RESERVATIONS_PER_WEEK = 3;
 const DEFAULT_TIMEZONE = 'UTC';
@@ -135,19 +130,43 @@ export class ReservationsService {
     );
   }
 
-  async findAll(pagination?: PaginationOptions) {
-    const page = Math.max(1, pagination?.page ?? 1);
-    const pageSize = Math.min(100, Math.max(1, pagination?.pageSize ?? 10));
+  async findAll(query?: ReservationsQuery) {
+    const page = Math.max(1, query?.page ?? 1);
+    const pageSize = Math.min(100, Math.max(1, query?.pageSize ?? 10));
     const skip = (page - 1) * pageSize;
+    const sortBy = query?.sortBy ?? 'startAt';
+    const sortOrder = query?.sortOrder ?? 'desc';
+
+    const where: Prisma.ReservationWhereInput = {};
+    if (query?.spaceId) where.spaceId = query.spaceId;
+    if (query?.placeId) where.placeId = query.placeId;
+    if (query?.clientEmail) where.clientEmail = query.clientEmail;
+
+    if (query?.fromDate || query?.toDate) {
+      where.startAt = {};
+      if (query.fromDate) {
+        (where.startAt as Prisma.DateTimeFilter).gte = new Date(
+          `${query.fromDate}T00:00:00.000Z`,
+        );
+      }
+      if (query.toDate) {
+        (where.startAt as Prisma.DateTimeFilter).lte = new Date(
+          `${query.toDate}T23:59:59.999Z`,
+        );
+      }
+    }
+
+    const orderBy = { [sortBy]: sortOrder } as Prisma.ReservationOrderByWithRelationInput;
 
     const [items, total] = await Promise.all([
       this.prisma.reservation.findMany({
+        where,
         skip,
         take: pageSize,
-        orderBy: { startAt: 'desc' },
+        orderBy,
         include: { space: { include: { place: true } } },
       }),
-      this.prisma.reservation.count(),
+      this.prisma.reservation.count({ where }),
     ]);
 
     return {

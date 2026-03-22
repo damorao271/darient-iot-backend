@@ -8,13 +8,20 @@ import {
   Delete,
   Query,
 } from '@nestjs/common';
-import { ApiResponse, ApiSecurity } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiSecurity,
+  ApiTags,
+} from '@nestjs/swagger';
 import { SuccessMessage } from '../common/decorators/success-message.decorator';
 import { ReservationsService } from './reservations.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
+import { ReservationsQueryDto } from './dto/reservations-query.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
-import { PaginationQueryDto } from './dto/pagination-query.dto';
 
+@ApiTags('reservations')
 @ApiSecurity('api-key')
 @Controller('reservations')
 export class ReservationsController {
@@ -48,13 +55,33 @@ export class ReservationsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all reservations (paginated)' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
+  @ApiQuery({ name: 'pageSize', required: false, type: Number, description: 'Items per page (default: 10, max: 100)' })
+  @ApiQuery({ name: 'sortBy', required: false, enum: ['startAt', 'createdAt', 'clientEmail'], description: 'Sort by field (default: startAt)' })
+  @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'], description: 'Sort direction (default: desc)' })
+  @ApiQuery({ name: 'spaceId', required: false, type: String, description: 'Filter by space CUID' })
+  @ApiQuery({ name: 'placeId', required: false, type: String, description: 'Filter by place CUID' })
+  @ApiQuery({ name: 'clientEmail', required: false, type: String, description: 'Filter by client email' })
+  @ApiQuery({ name: 'fromDate', required: false, type: String, description: 'Filter reservations from this date (YYYY-MM-DD, UTC)' })
+  @ApiQuery({ name: 'toDate', required: false, type: String, description: 'Filter reservations until this date (YYYY-MM-DD, UTC)' })
   @ApiResponse({
     status: 200,
     description: 'Paginated list of reservations',
     schema: { $ref: '#/components/schemas/SuccessResponse' },
   })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation failed (e.g. invalid date format, fromDate > toDate)',
+    schema: { $ref: '#/components/schemas/ErrorResponse' },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'API key missing or invalid',
+    schema: { $ref: '#/components/schemas/ErrorResponse' },
+  })
   @SuccessMessage('Reservations retrieved successfully')
-  findAll(@Query() query: PaginationQueryDto) {
+  findAll(@Query() query: ReservationsQueryDto) {
     return this.reservationsService.findAll(query);
   }
 

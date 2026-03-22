@@ -352,6 +352,196 @@ describe('ReservationsController (e2e)', () => {
     });
   });
 
+  describe('GET /reservations', () => {
+    it('should return 401 when API key is missing', () => {
+      return request(app.getHttpServer())
+        .get('/reservations')
+        .expect(401);
+    });
+
+    it('should return paginated list with default pagination', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/reservations')
+        .set('x-api-key', apiKey)
+        .expect(200);
+
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveProperty('items');
+      expect(res.body.data).toHaveProperty('meta');
+      expect(res.body.data.meta).toMatchObject({
+        page: 1,
+        pageSize: 10,
+        totalPages: expect.any(Number),
+      });
+      expect(Array.isArray(res.body.data.items)).toBe(true);
+    });
+
+    it('should respect page and pageSize query params', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/reservations?page=2&pageSize=5')
+        .set('x-api-key', apiKey)
+        .expect(200);
+
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.meta).toMatchObject({
+        page: 2,
+        pageSize: 5,
+      });
+    });
+
+    it('should filter by spaceId', async () => {
+      const placeRes = await request(app.getHttpServer())
+        .post('/places')
+        .set('x-api-key', apiKey)
+        .send(validPlace)
+        .expect(201);
+
+      const placeId = placeRes.body.data.id;
+
+      const spaceRes = await request(app.getHttpServer())
+        .post('/spaces')
+        .set('x-api-key', apiKey)
+        .send({ ...validSpace, placeId })
+        .expect(201);
+
+      const spaceId = spaceRes.body.data.id;
+
+      await request(app.getHttpServer())
+        .post('/reservations')
+        .set('x-api-key', apiKey)
+        .send({
+          ...reservationPayload(),
+          spaceId,
+          placeId,
+        })
+        .expect(201);
+
+      const listRes = await request(app.getHttpServer())
+        .get(`/reservations?spaceId=${spaceId}`)
+        .set('x-api-key', apiKey)
+        .expect(200);
+
+      expect(listRes.body.data.items.length).toBeGreaterThanOrEqual(1);
+      expect(listRes.body.data.items.every((r: { spaceId: string }) => r.spaceId === spaceId)).toBe(true);
+
+      await prisma.reservation.deleteMany({ where: { spaceId } });
+      await prisma.space.delete({ where: { id: spaceId } });
+      await prisma.place.delete({ where: { id: placeId } });
+    });
+
+    it('should filter by clientEmail', async () => {
+      const placeRes = await request(app.getHttpServer())
+        .post('/places')
+        .set('x-api-key', apiKey)
+        .send(validPlace)
+        .expect(201);
+
+      const placeId = placeRes.body.data.id;
+
+      const spaceRes = await request(app.getHttpServer())
+        .post('/spaces')
+        .set('x-api-key', apiKey)
+        .send({ ...validSpace, placeId })
+        .expect(201);
+
+      const spaceId = spaceRes.body.data.id;
+
+      const uniqueEmail = `filter-${Date.now()}@example.com`;
+      await request(app.getHttpServer())
+        .post('/reservations')
+        .set('x-api-key', apiKey)
+        .send({
+          ...reservationPayload({ clientEmail: uniqueEmail }),
+          spaceId,
+          placeId,
+        })
+        .expect(201);
+
+      const listRes = await request(app.getHttpServer())
+        .get(`/reservations?clientEmail=${encodeURIComponent(uniqueEmail)}`)
+        .set('x-api-key', apiKey)
+        .expect(200);
+
+      expect(listRes.body.data.items.every((r: { clientEmail: string }) => r.clientEmail === uniqueEmail)).toBe(true);
+
+      await prisma.reservation.deleteMany({ where: { spaceId } });
+      await prisma.space.delete({ where: { id: spaceId } });
+      await prisma.place.delete({ where: { id: placeId } });
+    });
+
+    it('should filter by fromDate and toDate', async () => {
+      const placeRes = await request(app.getHttpServer())
+        .post('/places')
+        .set('x-api-key', apiKey)
+        .send(validPlace)
+        .expect(201);
+
+      const placeId = placeRes.body.data.id;
+
+      const spaceRes = await request(app.getHttpServer())
+        .post('/spaces')
+        .set('x-api-key', apiKey)
+        .send({ ...validSpace, placeId })
+        .expect(201);
+
+      const spaceId = spaceRes.body.data.id;
+
+      const fixedDate = '2025-03-22';
+      await request(app.getHttpServer())
+        .post('/reservations')
+        .set('x-api-key', apiKey)
+        .send({
+          ...reservationPayload({ reservationDate: `${fixedDate}T12:00:00.000Z` }),
+          spaceId,
+          placeId,
+        })
+        .expect(201);
+
+      const listRes = await request(app.getHttpServer())
+        .get(`/reservations?fromDate=2025-03-22&toDate=2025-03-22`)
+        .set('x-api-key', apiKey)
+        .expect(200);
+
+      expect(listRes.body.data.items.length).toBeGreaterThanOrEqual(1);
+      expect(
+        listRes.body.data.items.some((r: { reservationDate: string }) => r.reservationDate === '2025-03-22'),
+      ).toBe(true);
+
+      await prisma.reservation.deleteMany({ where: { spaceId } });
+      await prisma.space.delete({ where: { id: spaceId } });
+      await prisma.place.delete({ where: { id: placeId } });
+    });
+
+    it('should support sortBy and sortOrder', async () => {
+      const ascRes = await request(app.getHttpServer())
+        .get('/reservations?sortBy=clientEmail&sortOrder=asc&pageSize=5')
+        .set('x-api-key', apiKey)
+        .expect(200);
+
+      const descRes = await request(app.getHttpServer())
+        .get('/reservations?sortBy=clientEmail&sortOrder=desc&pageSize=5')
+        .set('x-api-key', apiKey)
+        .expect(200);
+
+      expect(ascRes.body.success).toBe(true);
+      expect(descRes.body.success).toBe(true);
+
+      if (ascRes.body.data.items.length >= 2 && descRes.body.data.items.length >= 2) {
+        const ascEmails = ascRes.body.data.items.map((r: { clientEmail: string }) => r.clientEmail);
+        const descEmails = descRes.body.data.items.map((r: { clientEmail: string }) => r.clientEmail);
+        expect(ascEmails[0] <= ascEmails[1]).toBe(true);
+        expect(descEmails[0] >= descEmails[1]).toBe(true);
+      }
+    });
+
+    it('should return 400 when fromDate is after toDate', () => {
+      return request(app.getHttpServer())
+        .get('/reservations?fromDate=2025-03-25&toDate=2025-03-20')
+        .set('x-api-key', apiKey)
+        .expect(400);
+    });
+  });
+
   describe('PATCH /reservations/:id', () => {
     it('should return 409 when update causes schedule conflict', async () => {
       const placeRes = await request(app.getHttpServer())
