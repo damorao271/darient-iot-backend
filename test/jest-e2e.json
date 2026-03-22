@@ -1,0 +1,16 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "setupFiles": ["<rootDir>/setup-e2e.ts"],
+  "moduleNameMapper": {
+    "^(.*)generated/prisma/client\\.js$": "<rootDir>/../generated/prisma/client.ts",
+    "^\\./enums\\.js$": "<rootDir>/../generated/prisma/enums.ts",
+    "^\\./internal/class\\.js$": "<rootDir>/../generated/prisma/internal/class.ts",
+    "^\\./internal/prismaNamespace\\.js$": "<rootDir>/../generated/prisma/internal/prismaNamespace.ts"
+  },
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".e2e-spec.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  }
+}

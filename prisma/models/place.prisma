@@ -1,0 +1,10 @@
+model Place {
+  id        String   @id @default(cuid())
+  name      String   @db.VarChar(100)
+  latitude  Float
+  longitude Float
+  timezone  String   @default("UTC") @db.VarChar(50)
+  spaces    Space[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

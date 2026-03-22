@@ -1,0 +1,681 @@
+{
+  "info": {
+    "_postman_id": "darient-iot-backend",
+    "name": "Darient IoT Backend",
+    "description": "Collection to test all endpoints of the Darient IoT Backend API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "place_id",
+      "value": ""
+    },
+    {
+      "key": "space_id",
+      "value": ""
+    },
+    {
+      "key": "reservation_id",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "App",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": ["{{base_url}}"],
+              "path": [""]
+            },
+            "description": "Simple health check endpoint"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Places",
+      "item": [
+        {
+          "name": "Create Place",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    const id = json.data?.id || json.id;",
+                  "    if (id) {",
+                  "        pm.collectionVariables.set('place_id', id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Main Office\",\n  \"latitude\": 40.4168,\n  \"longitude\": -3.7038,\n  \"timezone\": \"Europe/Madrid\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/places",
+              "host": ["{{base_url}}"],
+              "path": ["places"]
+            },
+            "description": "Create a new place. Required: name, latitude (-90 to 90), longitude (-180 to 180). Optional: timezone (IANA, e.g. Europe/Madrid; default UTC)"
+          }
+        },
+        {
+          "name": "Get All Places",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/places",
+              "host": ["{{base_url}}"],
+              "path": ["places"]
+            },
+            "description": "List all places"
+          }
+        },
+        {
+          "name": "Get Place by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/places/{{place_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["places", "{{place_id}}"]
+            },
+            "description": "Get a single place by ID"
+          }
+        },
+        {
+          "name": "Update Place",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Office Name\",\n  \"latitude\": 40.4178,\n  \"longitude\": -3.7048,\n  \"timezone\": \"Europe/Madrid\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/places/{{place_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["places", "{{place_id}}"]
+            },
+            "description": "Update a place. All fields are optional"
+          }
+        },
+        {
+          "name": "Delete Place",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/places/{{place_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["places", "{{place_id}}"]
+            },
+            "description": "Delete a place"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Spaces",
+      "item": [
+        {
+          "name": "Create Space",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    const id = json.data?.id || json.id;",
+                  "    if (id) {",
+                  "        pm.collectionVariables.set('space_id', id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"placeId\": \"{{place_id}}\",\n  \"name\": \"Meeting Room A\",\n  \"reference\": \"MRA-01\",\n  \"capacity\": 10,\n  \"description\": \"Main meeting room with projector\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/spaces",
+              "host": ["{{base_url}}"],
+              "path": ["spaces"]
+            },
+            "description": "Create a new space. Required: placeId (CUID), name, capacity. Optional: reference, description"
+          }
+        },
+        {
+          "name": "Get All Spaces",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/spaces?page=1&pageSize=10&sortBy=name&sortOrder=asc",
+              "host": ["{{base_url}}"],
+              "path": ["spaces"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" },
+                { "key": "sortBy", "value": "name" },
+                { "key": "sortOrder", "value": "asc" },
+                { "key": "name", "value": "", "disabled": true },
+                { "key": "hasReservations", "value": "", "disabled": true }
+              ]
+            },
+            "description": "Paginated list of spaces. Optional: page, pageSize, sortBy (name|capacity), sortOrder (asc|desc), name (partial search), hasReservations (true|false)"
+          }
+        },
+        {
+          "name": "Get Space by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/spaces/{{space_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["spaces", "{{space_id}}"]
+            },
+            "description": "Get a single space by ID"
+          }
+        },
+        {
+          "name": "Update Space",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Meeting Room A - Updated\",\n  \"capacity\": 12\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/spaces/{{space_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["spaces", "{{space_id}}"]
+            },
+            "description": "Update a space. All fields are optional"
+          }
+        },
+        {
+          "name": "Delete Space",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/spaces/{{space_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["spaces", "{{space_id}}"]
+            },
+            "description": "Delete a space"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reservations",
+      "item": [
+        {
+          "name": "Create Reservation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    const id = json.data?.id || json.id;",
+                  "    if (id) {",
+                  "        pm.collectionVariables.set('reservation_id', id);",
+                  "    }",
+                  "}",
+                  "pm.test('Status code is 201', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spaceId\": \"{{space_id}}\",\n  \"placeId\": \"{{place_id}}\",\n  \"clientEmail\": \"client@example.com\",\n  \"reservationDate\": \"2025-03-25T00:00:00.000Z\",\n  \"startTime\": \"09:00\",\n  \"endTime\": \"10:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["reservations"]
+            },
+            "description": "Create a new reservation. Required: spaceId (CUID), clientEmail, reservationDate (ISO date/datetime), startTime (HH:mm), endTime (HH:mm). Optional: placeId.\n\nTimes are interpreted in the place's timezone (from space→place). Stored as UTC (startAt, endAt).\n\nResponse includes: reservationDate, startTime, endTime (place local); startAt, endAt (UTC); timezone.\n\nBusiness rules: No schedule overlap for same space (back-to-back OK); max 3 reservations per week (Mon-Sun) per client."
+          }
+        },
+        {
+          "name": "Create Reservation - Back-to-Back (2nd slot)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Back-to-back allowed (10:00 starts when 09:00-10:00 ends)', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.data?.startTime).to.eql('10:00');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spaceId\": \"{{space_id}}\",\n  \"placeId\": \"{{place_id}}\",\n  \"clientEmail\": \"client@example.com\",\n  \"reservationDate\": \"2025-03-25T00:00:00.000Z\",\n  \"startTime\": \"10:00\",\n  \"endTime\": \"11:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["reservations"]
+            },
+            "description": "Run after 'Create Reservation' (09:00-10:00). Border case: one slot starts exactly when another ends - should succeed (201)."
+          }
+        },
+        {
+          "name": "Create Reservation - Schedule Conflict (expect 409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 409 Conflict', () => pm.response.to.have.status(409));",
+                  "pm.test('Error is ERR_SCHEDULE_CONFLICT', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.errorCode).to.eql('ERR_SCHEDULE_CONFLICT');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spaceId\": \"{{space_id}}\",\n  \"placeId\": \"{{place_id}}\",\n  \"clientEmail\": \"client@example.com\",\n  \"reservationDate\": \"2025-03-25T00:00:00.000Z\",\n  \"startTime\": \"09:30\",\n  \"endTime\": \"10:30\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["reservations"]
+            },
+            "description": "Run after 'Create Reservation' (09:00-10:00). Overlapping times (09:30-10:30) - should fail with 409 ERR_SCHEDULE_CONFLICT."
+          }
+        },
+        {
+          "name": "Create Reservation - Limit Exceeded (4th in week, expect 409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 409 Conflict', () => pm.response.to.have.status(409));",
+                  "pm.test('Error is ERR_RESERVATION_LIMIT', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.errorCode).to.eql('ERR_RESERVATION_LIMIT');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spaceId\": \"{{space_id}}\",\n  \"placeId\": \"{{place_id}}\",\n  \"clientEmail\": \"limit-test@example.com\",\n  \"reservationDate\": \"2025-03-27T00:00:00.000Z\",\n  \"startTime\": \"14:00\",\n  \"endTime\": \"15:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["reservations"]
+            },
+            "description": "Run after creating 3 reservations for limit-test@example.com in the same week (Mon 24, Tue 25, Wed 26 Mar 2025). 4th on Thu 27 - should fail with 409 ERR_RESERVATION_LIMIT."
+          }
+        },
+        {
+          "name": "Create Reservation - Week 1-3 (for limit test)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spaceId\": \"{{space_id}}\",\n  \"placeId\": \"{{place_id}}\",\n  \"clientEmail\": \"limit-test@example.com\",\n  \"reservationDate\": \"2025-03-24T00:00:00.000Z\",\n  \"startTime\": \"09:00\",\n  \"endTime\": \"10:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["reservations"]
+            },
+            "description": "1st of 3 reservations (Mon Mar 24). Run this, then Tue/Wed requests, then 'Limit Exceeded' for 4th."
+          }
+        },
+        {
+          "name": "Create Reservation - Limit Test 2 (Tue)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "x-api-key", "value": "{{api_key}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spaceId\": \"{{space_id}}\",\n  \"placeId\": \"{{place_id}}\",\n  \"clientEmail\": \"limit-test@example.com\",\n  \"reservationDate\": \"2025-03-25T00:00:00.000Z\",\n  \"startTime\": \"10:00\",\n  \"endTime\": \"11:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["reservations"]
+            },
+            "description": "2nd of 3 reservations (Tue Mar 25) for limit-test@example.com."
+          }
+        },
+        {
+          "name": "Create Reservation - Limit Test 3 (Wed)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "x-api-key", "value": "{{api_key}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spaceId\": \"{{space_id}}\",\n  \"placeId\": \"{{place_id}}\",\n  \"clientEmail\": \"limit-test@example.com\",\n  \"reservationDate\": \"2025-03-26T00:00:00.000Z\",\n  \"startTime\": \"11:00\",\n  \"endTime\": \"12:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["reservations"]
+            },
+            "description": "3rd of 3 reservations (Wed Mar 26). After this, run 'Limit Exceeded' to get 409."
+          }
+        },
+        {
+          "name": "Get All Reservations",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-api-key", "value": "{{api_key}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reservations?page=1&pageSize=10&sortBy=startAt&sortOrder=desc",
+              "host": ["{{base_url}}"],
+              "path": ["reservations"],
+              "query": [
+                { "key": "page", "value": "1", "description": "Page number (default: 1)" },
+                { "key": "pageSize", "value": "10", "description": "Items per page (default: 10, max: 100)" },
+                { "key": "sortBy", "value": "startAt", "description": "Sort by field: startAt | createdAt | clientEmail (default: startAt)" },
+                { "key": "sortOrder", "value": "desc", "description": "Sort direction: asc | desc (default: desc)" },
+                { "key": "spaceId", "value": "{{space_id}}", "disabled": true, "description": "Filter by space CUID" },
+                { "key": "placeId", "value": "{{place_id}}", "disabled": true, "description": "Filter by place CUID" },
+                { "key": "clientEmail", "value": "", "disabled": true, "description": "Filter by client email" },
+                { "key": "fromDate", "value": "2025-03-20", "disabled": true, "description": "Filter reservations from date (YYYY-MM-DD, UTC)" },
+                { "key": "toDate", "value": "2025-03-31", "disabled": true, "description": "Filter reservations until date (YYYY-MM-DD, UTC)" }
+              ]
+            },
+            "description": "Paginated list of reservations. Optional: page, pageSize, sortBy (startAt|createdAt|clientEmail), sortOrder (asc|desc), spaceId, placeId, clientEmail, fromDate, toDate (YYYY-MM-DD). fromDate must be ≤ toDate. Each item includes reservationDate, startTime, endTime (place local); startAt, endAt (UTC); timezone."
+          }
+        },
+        {
+          "name": "Get Reservation by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-api-key", "value": "{{api_key}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reservations/{{reservation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["reservations", "{{reservation_id}}"]
+            },
+            "description": "Get a single reservation by ID. Response includes reservationDate, startTime, endTime (place local); startAt, endAt (UTC); timezone."
+          }
+        },
+        {
+          "name": "Update Reservation",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "x-api-key", "value": "{{api_key}}", "type": "text" },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clientEmail\": \"updated@example.com\",\n  \"startTime\": \"10:00\",\n  \"endTime\": \"12:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations/{{reservation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["reservations", "{{reservation_id}}"]
+            },
+            "description": "Update a reservation. Optional: spaceId, placeId, clientEmail, reservationDate, startTime, endTime. Times are in place local; can omit reservationDate when only changing time."
+          }
+        },
+        {
+          "name": "Delete Reservation",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "x-api-key", "value": "{{api_key}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reservations/{{reservation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["reservations", "{{reservation_id}}"]
+            },
+            "description": "Delete a reservation"
+          }
+        }
+      ]
+    }
+  ]
+}
