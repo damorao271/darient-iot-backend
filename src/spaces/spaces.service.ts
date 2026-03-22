@@ -55,10 +55,53 @@ export class SpacesService {
     });
   }
 
-  update(id: string, updateSpaceDto: UpdateSpaceDto) {
+  async update(id: string, updateSpaceDto: UpdateSpaceDto) {
+    const space = await this.prisma.space.findUnique({
+      where: { id },
+    });
+    if (!space) {
+      throw new NotFoundException({
+        message: 'Space not found',
+        errorCode: 'ERR_SPACE_NOT_FOUND',
+      });
+    }
+
+    if (updateSpaceDto.placeId !== undefined) {
+      const place = await this.prisma.place.findUnique({
+        where: { id: updateSpaceDto.placeId },
+      });
+      if (!place) {
+        throw new NotFoundException({
+          message: 'Place not found',
+          errorCode: 'ERR_PLACE_NOT_FOUND',
+        });
+      }
+    }
+
+    if (updateSpaceDto.name !== undefined) {
+      const targetPlaceId = updateSpaceDto.placeId ?? space.placeId;
+      const existing = await this.prisma.space.findFirst({
+        where: {
+          placeId: targetPlaceId,
+          name: updateSpaceDto.name,
+          id: { not: id },
+        },
+      });
+      if (existing) {
+        throw new ConflictException({
+          message: 'A space with this name already exists in this place',
+          errorCode: 'ERR_DUPLICATE_SPACE',
+        });
+      }
+    }
+
     return this.prisma.space.update({
       where: { id },
       data: updateSpaceDto,
+      include: {
+        place: true,
+        reservations: true,
+      },
     });
   }
 
