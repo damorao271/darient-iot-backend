@@ -60,8 +60,9 @@
                 "exec": [
                   "if (pm.response.code === 201) {",
                   "    const json = pm.response.json();",
-                  "    if (json.id) {",
-                  "        pm.collectionVariables.set('place_id', json.id);",
+                  "    const id = json.data?.id || json.id;",
+                  "    if (id) {",
+                  "        pm.collectionVariables.set('place_id', id);",
                   "    }",
                   "}"
                 ],
@@ -84,14 +85,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Main Office\",\n  \"latitude\": 40.4168,\n  \"longitude\": -3.7038\n}"
+              "raw": "{\n  \"name\": \"Main Office\",\n  \"latitude\": 40.4168,\n  \"longitude\": -3.7038,\n  \"timezone\": \"Europe/Madrid\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/places",
               "host": ["{{base_url}}"],
               "path": ["places"]
             },
-            "description": "Create a new place. Required: name, latitude (-90 to 90), longitude (-180 to 180)"
+            "description": "Create a new place. Required: name, latitude (-90 to 90), longitude (-180 to 180). Optional: timezone (IANA, e.g. Europe/Madrid; default UTC)"
           }
         },
         {
@@ -149,7 +150,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Office Name\",\n  \"latitude\": 40.4178,\n  \"longitude\": -3.7048\n}"
+              "raw": "{\n  \"name\": \"Updated Office Name\",\n  \"latitude\": 40.4178,\n  \"longitude\": -3.7048,\n  \"timezone\": \"Europe/Madrid\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/places/{{place_id}}",
@@ -192,8 +193,9 @@
                 "exec": [
                   "if (pm.response.code === 201) {",
                   "    const json = pm.response.json();",
-                  "    if (json.id) {",
-                  "        pm.collectionVariables.set('space_id', json.id);",
+                  "    const id = json.data?.id || json.id;",
+                  "    if (id) {",
+                  "        pm.collectionVariables.set('space_id', id);",
                   "    }",
                   "}"
                 ],
@@ -365,7 +367,7 @@
               "host": ["{{base_url}}"],
               "path": ["reservations"]
             },
-            "description": "Create a new reservation. Required: spaceId (CUID), clientEmail, reservationDate (ISO datetime), startTime (HH:mm), endTime (HH:mm). Optional: placeId.\n\nBusiness rules: No schedule overlap for same space (back-to-back OK); max 3 reservations per week (Mon-Sun) per client."
+            "description": "Create a new reservation. Required: spaceId (CUID), clientEmail, reservationDate (ISO date/datetime), startTime (HH:mm), endTime (HH:mm). Optional: placeId.\n\nTimes are interpreted in the place's timezone (from space→place). Stored as UTC (startAt, endAt).\n\nResponse includes: reservationDate, startTime, endTime (place local); startAt, endAt (UTC); timezone.\n\nBusiness rules: No schedule overlap for same space (back-to-back OK); max 3 reservations per week (Mon-Sun) per client."
           }
         },
         {
@@ -618,7 +620,7 @@
                 }
               ]
             },
-            "description": "List all reservations with pagination"
+            "description": "List all reservations with pagination. Each item includes reservationDate, startTime, endTime (place local); startAt, endAt (UTC); timezone."
           }
         },
         {
@@ -633,7 +635,7 @@
               "host": ["{{base_url}}"],
               "path": ["reservations", "{{reservation_id}}"]
             },
-            "description": "Get a single reservation by ID"
+            "description": "Get a single reservation by ID. Response includes reservationDate, startTime, endTime (place local); startAt, endAt (UTC); timezone."
           }
         },
         {
@@ -656,7 +658,7 @@
               "host": ["{{base_url}}"],
               "path": ["reservations", "{{reservation_id}}"]
             },
-            "description": "Update a reservation. All fields are optional"
+            "description": "Update a reservation. Optional: spaceId, placeId, clientEmail, reservationDate, startTime, endTime. Times are in place local; can omit reservationDate when only changing time."
           }
         },
         {

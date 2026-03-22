@@ -2,9 +2,17 @@ import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 import { parseTimeToMinutes } from '../../common/utils/time.utils';
 
-/** HH:mm (e.g. "14:30") or ISO 8601 timestamp (e.g. "2025-03-21T14:30:00.000Z") */
+/** HH:mm with valid hour (0-23) and minute (0-59) */
+const hhmmSchema = z
+  .string()
+  .regex(/^\d{1,2}:\d{2}$/, 'Invalid HH:mm format')
+  .refine((s) => {
+    const [h, m] = s.split(':').map(Number);
+    return h >= 0 && h <= 23 && m >= 0 && m <= 59;
+  }, 'Invalid time: hour must be 0-23, minutes must be 0-59');
+
 const timeSchema = z.union([
-  z.string().regex(/^\d{1,2}:\d{2}$/, 'Invalid HH:mm format'),
+  hhmmSchema,
   z.string().datetime(),
 ]);
 

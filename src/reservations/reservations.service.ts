@@ -7,10 +7,15 @@ import type { z } from 'zod';
 import { Prisma } from '../../generated/prisma/client.js';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { intervalsOverlap } from '../common/utils/interval.utils';
+import {
+  getWeekBoundsUtc,
+  localToUtc,
+  utcToLocalDateString,
+  utcToLocalTimeString,
+} from '../common/utils/timezone.utils';
 import { parseTimeToMinutes } from '../common/utils/time.utils';
 import { CreateReservationSchema } from './dto/create-reservation.dto';
 import type { UpdateReservationDto } from './dto/update-reservation.dto';
-import { getWeekBounds } from './utils/week.utils';
 
 type CreateReservationInput = z.infer<typeof CreateReservationSchema>;
 
@@ -20,6 +25,20 @@ export interface PaginationOptions {
 }
 
 const MAX_RESERVATIONS_PER_WEEK = 3;
+const DEFAULT_TIMEZONE = 'UTC';
+
+function serializeReservation(
+  r: { startAt: Date; endAt: Date; space: { place?: { timezone: string } | null } } & Record<string, unknown>,
+) {
+  const tz = r.space?.place?.timezone ?? DEFAULT_TIMEZONE;
+  return {
+    ...r,
+    reservationDate: utcToLocalDateString(r.startAt, tz),
+    startTime: utcToLocalTimeString(r.startAt, tz),
+    endTime: utcToLocalTimeString(r.endAt, tz),
+    timezone: tz,
+  };
+}
 
 @Injectable()
 export class ReservationsService {
@@ -36,11 +55,11 @@ export class ReservationsService {
       ...rest
     } = createReservationDto;
 
-    return this.prisma.$mpl(
+    return this.prisma.$transaction(
       async (tx) => {
         const space = await tx.space.findUnique({
           where: { id: spaceId },
-          select: { placeId: true },
+          select: { placeId: true, place: { select: { timezone: true } } },
         });
         if (!space) {
           throw new NotFoundException({
@@ -49,32 +68,30 @@ export class ReservationsService {
           });
         }
 
-        const resDate = new Date(reservationDate);
-        const startMinutes = parseTimeToMinutes(startTime);
-        const endMinutes = parseTimeToMinutes(endTime);
+        const timezone = space.place?.timezone ?? DEFAULT_TIMEZONE;
+        const startAt = localToUtc(reservationDate, startTime, timezone);
+        const endAt = localToUtc(reservationDate, endTime, timezone);
+
+        if (endAt.getTime() <= startAt.getTime()) {
+          throw new ConflictException({
+            message: 'endTime must be after startTime',
+            errorCode: 'ERR_INVALID_TIME_RANGE',
+          });
+        }
 
         const existingForSpace = await tx.reservation.findMany({
-          where: {
-            spaceId,
-            reservationDate: {
-              gte: new Date(
-                resDate.getFullYear(),
-                resDate.getMonth(),
-                resDate.getDate(),
-              ),
-              lt: new Date(
-                resDate.getFullYear(),
-                resDate.getMonth(),
-                resDate.getDate() + 1,
-              ),
-            },
-          },
+          where: { spaceId },
         });
 
         for (const existing of existingForSpace) {
-          const exStart = parseTimeToMinutes(existing.startTime);
-          const exEnd = parseTimeToMinutes(existing.endTime);
-          if (intervalsOverlap(startMinutes, endMinutes, exStart, exEnd)) {
+          if (
+            intervalsOverlap(
+              startAt.getTime(),
+              endAt.getTime(),
+              existing.startAt.getTime(),
+              existing.endAt.getTime(),
+            )
+          ) {
             throw new ConflictException({
               message:
                 'This space is already reserved for the requested time slot',
@@ -83,11 +100,14 @@ export class ReservationsService {
           }
         }
 
-        const { start: weekStart, end: weekEnd } = getWeekBounds(resDate);
+        const { start: weekStart, end: weekEnd } = getWeekBoundsUtc(
+          startAt,
+          timezone,
+        );
         const countInWeek = await tx.reservation.count({
           where: {
             clientEmail,
-            reservationDate: { gte: weekStart, lte: weekEnd },
+            startAt: { gte: weekStart, lte: weekEnd },
           },
         });
         if (countInWeek >= MAX_RESERVATIONS_PER_WEEK) {
@@ -97,23 +117,21 @@ export class ReservationsService {
           });
         }
 
-        return tx.reservation.create({
+        const created = await tx.reservation.create({
           data: {
             clientEmail,
-            reservationDate: resDate,
-            startTime,
-            endTime,
+            startAt,
+            endAt,
             spaceId,
             placeId: placeId ?? space.placeId,
             ...rest,
           } as Prisma.ReservationUncheckedCreateInput,
-          include: { space: true },
+          include: { space: { include: { place: true } } },
         });
+
+        return serializeReservation(created);
       },
-      {
-        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
-        timeout: 10000,
-      },
+      { timeout: 10000 },
     );
   }
 
@@ -126,14 +144,14 @@ export class ReservationsService {
       this.prisma.reservation.findMany({
         skip,
         take: pageSize,
-        orderBy: { reservationDate: 'desc' },
-        include: { space: true },
+        orderBy: { startAt: 'desc' },
+        include: { space: { include: { place: true } } },
       }),
       this.prisma.reservation.count(),
     ]);
 
     return {
-      items,
+      items: items.map(serializeReservation),
       meta: {
         page,
         pageSize,
@@ -143,17 +161,24 @@ export class ReservationsService {
     };
   }
 
-  findOne(id: string) {
-    return this.prisma.reservation.findUniqueOrThrow({
+  async findOne(id: string) {
+    const reservation = await this.prisma.reservation.findUnique({
       where: { id },
-      include: { space: true },
+      include: { space: { include: { place: true } } },
     });
+    if (!reservation) {
+      throw new NotFoundException({
+        message: 'Reservation not found',
+        errorCode: 'ERR_RESERVATION_NOT_FOUND',
+      });
+    }
+    return serializeReservation(reservation);
   }
 
   async update(id: string, updateReservationDto: UpdateReservationDto) {
     const existing = await this.prisma.reservation.findUnique({
       where: { id },
-      include: { space: true },
+      include: { space: { include: { place: true } } },
     });
     if (!existing) {
       throw new NotFoundException({
@@ -162,28 +187,10 @@ export class ReservationsService {
       });
     }
 
-    const effectiveSpaceId = updateReservationDto.spaceId ?? existing.spaceId;
-    const effectiveDate = updateReservationDto.reservationDate
-      ? new Date(updateReservationDto.reservationDate)
-      : existing.reservationDate;
-    const effectiveStartTime =
-      updateReservationDto.startTime ?? existing.startTime;
-    const effectiveEndTime = updateReservationDto.endTime ?? existing.endTime;
-    const effectiveClientEmail =
-      updateReservationDto.clientEmail ?? existing.clientEmail;
-
-    const startMinutes = parseTimeToMinutes(effectiveStartTime);
-    const endMinutes = parseTimeToMinutes(effectiveEndTime);
-    if (endMinutes <= startMinutes) {
-      throw new ConflictException({
-        message: 'endTime must be after startTime',
-        errorCode: 'ERR_INVALID_TIME_RANGE',
-      });
-    }
-
+    const spaceId = updateReservationDto.spaceId ?? existing.spaceId;
     const space = await this.prisma.space.findUnique({
-      where: { id: effectiveSpaceId },
-      select: { placeId: true },
+      where: { id: spaceId },
+      select: { placeId: true, place: { select: { timezone: true } } },
     });
     if (!space) {
       throw new NotFoundException({
@@ -192,42 +199,73 @@ export class ReservationsService {
       });
     }
 
-    const dayStart = new Date(
-      effectiveDate.getFullYear(),
-      effectiveDate.getMonth(),
-      effectiveDate.getDate(),
-    );
-    const dayEnd = new Date(
-      effectiveDate.getFullYear(),
-      effectiveDate.getMonth(),
-      effectiveDate.getDate() + 1,
-    );
+    const timezone = space.place?.timezone ?? DEFAULT_TIMEZONE;
+
+    let startAt: Date;
+    let endAt: Date;
+
+    if (
+      updateReservationDto.reservationDate != null ||
+      updateReservationDto.startTime != null ||
+      updateReservationDto.endTime != null
+    ) {
+      const dateStr =
+        updateReservationDto.reservationDate != null
+          ? updateReservationDto.reservationDate
+          : utcToLocalDateString(existing.startAt, timezone);
+      const startTimeStr =
+        updateReservationDto.startTime ??
+        utcToLocalTimeString(existing.startAt, timezone);
+      const endTimeStr =
+        updateReservationDto.endTime ??
+        utcToLocalTimeString(existing.endAt, timezone);
+
+      startAt = localToUtc(dateStr, startTimeStr, timezone);
+      endAt = localToUtc(dateStr, endTimeStr, timezone);
+    } else {
+      startAt = existing.startAt;
+      endAt = existing.endAt;
+    }
+
+    if (endAt.getTime() <= startAt.getTime()) {
+      throw new ConflictException({
+        message: 'endTime must be after startTime',
+        errorCode: 'ERR_INVALID_TIME_RANGE',
+      });
+    }
 
     const existingForSpace = await this.prisma.reservation.findMany({
       where: {
         id: { not: id },
-        spaceId: effectiveSpaceId,
-        reservationDate: { gte: dayStart, lt: dayEnd },
+        spaceId,
       },
     });
 
     for (const other of existingForSpace) {
-      const exStart = parseTimeToMinutes(other.startTime);
-      const exEnd = parseTimeToMinutes(other.endTime);
-      if (intervalsOverlap(startMinutes, endMinutes, exStart, exEnd)) {
+      if (
+        intervalsOverlap(
+          startAt.getTime(),
+          endAt.getTime(),
+          other.startAt.getTime(),
+          other.endAt.getTime(),
+        )
+      ) {
         throw new ConflictException({
-          message: 'This space is already reserved for the requested time slot',
+          message:
+            'This space is already reserved for the requested time slot',
           errorCode: 'ERR_SCHEDULE_CONFLICT',
         });
       }
     }
 
-    const { start: weekStart, end: weekEnd } = getWeekBounds(effectiveDate);
+    const { start: weekStart, end: weekEnd } = getWeekBoundsUtc(startAt, timezone);
+    const effectiveClientEmail =
+      updateReservationDto.clientEmail ?? existing.clientEmail;
     const countInWeek = await this.prisma.reservation.count({
       where: {
         clientEmail: effectiveClientEmail,
-        reservationDate: { gte: weekStart, lte: weekEnd },
         id: { not: id },
+        startAt: { gte: weekStart, lte: weekEnd },
       },
     });
     if (countInWeek >= MAX_RESERVATIONS_PER_WEEK) {
@@ -237,14 +275,37 @@ export class ReservationsService {
       });
     }
 
-    return this.prisma.reservation.update({
+    const data: Prisma.ReservationUncheckedUpdateInput = {};
+    if (updateReservationDto.spaceId != null) data.spaceId = updateReservationDto.spaceId;
+    if (updateReservationDto.placeId != null) data.placeId = updateReservationDto.placeId;
+    if (updateReservationDto.clientEmail != null)
+      data.clientEmail = updateReservationDto.clientEmail;
+    if (updateReservationDto.reservationDate != null ||
+        updateReservationDto.startTime != null ||
+        updateReservationDto.endTime != null) {
+      data.startAt = startAt;
+      data.endAt = endAt;
+    }
+
+    const updated = await this.prisma.reservation.update({
       where: { id },
-      data: updateReservationDto,
-      include: { space: true },
+      data,
+      include: { space: { include: { place: true } } },
     });
+
+    return serializeReservation(updated);
   }
 
-  remove(id: string) {
+  async remove(id: string) {
+    const existing = await this.prisma.reservation.findUnique({
+      where: { id },
+    });
+    if (!existing) {
+      throw new NotFoundException({
+        message: 'Reservation not found',
+        errorCode: 'ERR_RESERVATION_NOT_FOUND',
+      });
+    }
     return this.prisma.reservation.delete({
       where: { id },
     });
