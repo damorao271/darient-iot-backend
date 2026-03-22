@@ -17,7 +17,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "NODE_OPTIONS=--experimental-vm-modules jest --config ./test/jest-e2e.json --watchman=false",
+    "test:e2e": "NODE_OPTIONS=--experimental-vm-modules jest --config ./test/jest-e2e.json --watchman=false --runInBand",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "prisma db seed"
   },
@@ -29,6 +29,8 @@
     "@nestjs/swagger": "^11.2.6",
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
     "nestjs-zod": "^5.2.1",
     "pg": "^8.20.0",
     "prisma": "^7.5.0",

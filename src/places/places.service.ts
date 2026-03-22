@@ -23,6 +23,7 @@ export class PlacesService {
         name: createPlaceDto.name,
         latitude: createPlaceDto.latitude,
         longitude: createPlaceDto.longitude,
+        ...(createPlaceDto.timezone && { timezone: createPlaceDto.timezone }),
       },
       include: { spaces: true },
     });

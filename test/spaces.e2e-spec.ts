@@ -25,11 +25,11 @@ describe('SpacesController (e2e)', () => {
     await app.close();
   });
 
-  const validPlace = {
-    name: 'E2E Spaces Test Place',
+  const validPlace = () => ({
+    name: `E2E Spaces Test Place ${Date.now()}`,
     latitude: 40.4168,
     longitude: -3.7038,
-  };
+  });
 
   const validSpace = {
     name: 'E2E Test Meeting Room',
@@ -135,10 +135,11 @@ describe('SpacesController (e2e)', () => {
 
   describe('GET /spaces/:id', () => {
     it('should return 200 with the space when it exists', async () => {
+      const place = validPlace();
       const placeRes = await request(app.getHttpServer())
         .post('/places')
         .set('x-api-key', apiKey)
-        .send(validPlace)
+        .send(place)
         .expect(201);
 
       const placeId = placeRes.body.data.id;
@@ -170,7 +171,7 @@ describe('SpacesController (e2e)', () => {
       expect(getRes.body.data).toHaveProperty('place');
       expect(getRes.body.data.place).toMatchObject({
         id: placeId,
-        name: validPlace.name,
+        name: place.name,
       });
       expect(getRes.body.data).toHaveProperty('reservations');
       expect(Array.isArray(getRes.body.data.reservations)).toBe(true);
@@ -182,10 +183,11 @@ describe('SpacesController (e2e)', () => {
     });
 
     it('should return 404 with ERR_SPACE_NOT_FOUND when space does not exist', async () => {
+      const place = validPlace();
       const placeRes = await request(app.getHttpServer())
         .post('/places')
         .set('x-api-key', apiKey)
-        .send(validPlace)
+        .send(place)
         .expect(201);
 
       const placeId = placeRes.body.data.id;
@@ -234,10 +236,11 @@ describe('SpacesController (e2e)', () => {
 
   describe('DELETE /spaces/:id', () => {
     it('should return 200 when deleting a space without reservations', async () => {
+      const place = validPlace();
       const placeRes = await request(app.getHttpServer())
         .post('/places')
         .set('x-api-key', apiKey)
-        .send(validPlace)
+        .send(place)
         .expect(201);
 
       const placeId = placeRes.body.data.id;
@@ -263,10 +266,11 @@ describe('SpacesController (e2e)', () => {
     });
 
     it('should return 409 when deleting a space with reservations', async () => {
+      const place = validPlace();
       const placeRes = await request(app.getHttpServer())
         .post('/places')
         .set('x-api-key', apiKey)
-        .send(validPlace)
+        .send(place)
         .expect(201);
 
       const placeId = placeRes.body.data.id;
