@@ -604,23 +604,22 @@
               { "key": "x-api-key", "value": "{{api_key}}", "type": "text" }
             ],
             "url": {
-              "raw": "{{base_url}}/reservations?page=1&pageSize=10",
+              "raw": "{{base_url}}/reservations?page=1&pageSize=10&sortBy=startAt&sortOrder=desc",
               "host": ["{{base_url}}"],
               "path": ["reservations"],
               "query": [
-                {
-                  "key": "page",
-                  "value": "1",
-                  "description": "Page number (default: 1)"
-                },
-                {
-                  "key": "pageSize",
-                  "value": "10",
-                  "description": "Items per page (default: 10, max: 100)"
-                }
+                { "key": "page", "value": "1", "description": "Page number (default: 1)" },
+                { "key": "pageSize", "value": "10", "description": "Items per page (default: 10, max: 100)" },
+                { "key": "sortBy", "value": "startAt", "description": "Sort by field: startAt | createdAt | clientEmail (default: startAt)" },
+                { "key": "sortOrder", "value": "desc", "description": "Sort direction: asc | desc (default: desc)" },
+                { "key": "spaceId", "value": "{{space_id}}", "disabled": true, "description": "Filter by space CUID" },
+                { "key": "placeId", "value": "{{place_id}}", "disabled": true, "description": "Filter by place CUID" },
+                { "key": "clientEmail", "value": "", "disabled": true, "description": "Filter by client email" },
+                { "key": "fromDate", "value": "2025-03-20", "disabled": true, "description": "Filter reservations from date (YYYY-MM-DD, UTC)" },
+                { "key": "toDate", "value": "2025-03-31", "disabled": true, "description": "Filter reservations until date (YYYY-MM-DD, UTC)" }
               ]
             },
-            "description": "List all reservations with pagination. Each item includes reservationDate, startTime, endTime (place local); startAt, endAt (UTC); timezone."
+            "description": "Paginated list of reservations. Optional: page, pageSize, sortBy (startAt|createdAt|clientEmail), sortOrder (asc|desc), spaceId, placeId, clientEmail, fromDate, toDate (YYYY-MM-DD). fromDate must be ≤ toDate. Each item includes reservationDate, startTime, endTime (place local); startAt, endAt (UTC); timezone."
           }
         },
         {
