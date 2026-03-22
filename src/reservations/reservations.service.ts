@@ -23,16 +23,23 @@ const MAX_RESERVATIONS_PER_WEEK = 3;
 const DEFAULT_TIMEZONE = 'UTC';
 
 function serializeReservation(
-  r: { startAt: Date; endAt: Date; space: { place?: { timezone: string } | null } } & Record<string, unknown>,
+  r: {
+    startAt: Date;
+    endAt: Date;
+    space?: { place?: { timezone: string } | null };
+  } & Record<string, unknown>,
+  options?: { excludeRelations?: boolean },
 ) {
   const tz = r.space?.place?.timezone ?? DEFAULT_TIMEZONE;
-  return {
-    ...r,
+  const { space: _space, ...rest } = r as typeof r & { space?: unknown };
+  const serialized = {
+    ...rest,
     reservationDate: utcToLocalDateString(r.startAt, tz),
-    startTime: utcToLocalTimeString(r.startAt, tz),
-    endTime: utcToLocalTimeString(r.endAt, tz),
     timezone: tz,
   };
+  return options?.excludeRelations
+    ? serialized
+    : { ...serialized, space: _space };
 }
 
 @Injectable()
@@ -156,7 +163,9 @@ export class ReservationsService {
       }
     }
 
-    const orderBy = { [sortBy]: sortOrder } as Prisma.ReservationOrderByWithRelationInput;
+    const orderBy = {
+      [sortBy]: sortOrder,
+    } as Prisma.ReservationOrderByWithRelationInput;
 
     const [items, total] = await Promise.all([
       this.prisma.reservation.findMany({
@@ -164,13 +173,17 @@ export class ReservationsService {
         skip,
         take: pageSize,
         orderBy,
-        include: { space: { include: { place: true } } },
+        include: {
+          space: { select: { place: { select: { timezone: true } } } },
+        },
       }),
       this.prisma.reservation.count({ where }),
     ]);
 
     return {
-      items: items.map(serializeReservation),
+      items: items.map((r) =>
+        serializeReservation(r, { excludeRelations: true }),
+      ),
       meta: {
         page,
         pageSize,
@@ -183,7 +196,6 @@ export class ReservationsService {
   async findOne(id: string) {
     const reservation = await this.prisma.reservation.findUnique({
       where: { id },
-      include: { space: { include: { place: true } } },
     });
     if (!reservation) {
       throw new NotFoundException({
@@ -191,7 +203,7 @@ export class ReservationsService {
         errorCode: 'ERR_RESERVATION_NOT_FOUND',
       });
     }
-    return serializeReservation(reservation);
+    return serializeReservation(reservation, { excludeRelations: true });
   }
 
   async update(id: string, updateReservationDto: UpdateReservationDto) {
@@ -270,14 +282,16 @@ export class ReservationsService {
         )
       ) {
         throw new ConflictException({
-          message:
-            'This space is already reserved for the requested time slot',
+          message: 'This space is already reserved for the requested time slot',
           errorCode: 'ERR_SCHEDULE_CONFLICT',
         });
       }
     }
 
-    const { start: weekStart, end: weekEnd } = getWeekBoundsUtc(startAt, timezone);
+    const { start: weekStart, end: weekEnd } = getWeekBoundsUtc(
+      startAt,
+      timezone,
+    );
     const effectiveClientEmail =
       updateReservationDto.clientEmail ?? existing.clientEmail;
     const countInWeek = await this.prisma.reservation.count({
@@ -295,13 +309,17 @@ export class ReservationsService {
     }
 
     const data: Prisma.ReservationUncheckedUpdateInput = {};
-    if (updateReservationDto.spaceId != null) data.spaceId = updateReservationDto.spaceId;
-    if (updateReservationDto.placeId != null) data.placeId = updateReservationDto.placeId;
+    if (updateReservationDto.spaceId != null)
+      data.spaceId = updateReservationDto.spaceId;
+    if (updateReservationDto.placeId != null)
+      data.placeId = updateReservationDto.placeId;
     if (updateReservationDto.clientEmail != null)
       data.clientEmail = updateReservationDto.clientEmail;
-    if (updateReservationDto.reservationDate != null ||
-        updateReservationDto.startTime != null ||
-        updateReservationDto.endTime != null) {
+    if (
+      updateReservationDto.reservationDate != null ||
+      updateReservationDto.startTime != null ||
+      updateReservationDto.endTime != null
+    ) {
       data.startAt = startAt;
       data.endAt = endAt;
     }

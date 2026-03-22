@@ -58,15 +58,60 @@ export class ReservationsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all reservations (paginated)' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
-  @ApiQuery({ name: 'pageSize', required: false, type: Number, description: 'Items per page (default: 10, max: 100)' })
-  @ApiQuery({ name: 'sortBy', required: false, enum: ['startAt', 'createdAt', 'clientEmail'], description: 'Sort by field (default: startAt)' })
-  @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'], description: 'Sort direction (default: desc)' })
-  @ApiQuery({ name: 'spaceId', required: false, type: String, description: 'Filter by space CUID' })
-  @ApiQuery({ name: 'placeId', required: false, type: String, description: 'Filter by place CUID' })
-  @ApiQuery({ name: 'clientEmail', required: false, type: String, description: 'Filter by client email' })
-  @ApiQuery({ name: 'fromDate', required: false, type: String, description: 'Filter reservations from this date (YYYY-MM-DD, UTC)' })
-  @ApiQuery({ name: 'toDate', required: false, type: String, description: 'Filter reservations until this date (YYYY-MM-DD, UTC)' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    required: false,
+    type: Number,
+    description: 'Items per page (default: 10, max: 100)',
+  })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    enum: ['startAt', 'createdAt', 'clientEmail'],
+    description: 'Sort by field (default: startAt)',
+  })
+  @ApiQuery({
+    name: 'sortOrder',
+    required: false,
+    enum: ['asc', 'desc'],
+    description: 'Sort direction (default: desc)',
+  })
+  @ApiQuery({
+    name: 'spaceId',
+    required: false,
+    type: String,
+    description: 'Filter by space CUID',
+  })
+  @ApiQuery({
+    name: 'placeId',
+    required: false,
+    type: String,
+    description: 'Filter by place CUID',
+  })
+  @ApiQuery({
+    name: 'clientEmail',
+    required: false,
+    type: String,
+    description: 'Filter by client email',
+  })
+  @ApiQuery({
+    name: 'fromDate',
+    required: false,
+    type: String,
+    description: 'Filter reservations from this date (YYYY-MM-DD, UTC)',
+  })
+  @ApiQuery({
+    name: 'toDate',
+    required: false,
+    type: String,
+    description: 'Filter reservations until this date (YYYY-MM-DD, UTC)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Paginated list of reservations',
@@ -74,7 +119,8 @@ export class ReservationsController {
   })
   @ApiResponse({
     status: 400,
-    description: 'Validation failed (e.g. invalid date format, fromDate > toDate)',
+    description:
+      'Validation failed (e.g. invalid date format, fromDate > toDate)',
     schema: { $ref: '#/components/schemas/ErrorResponse' },
   })
   @ApiResponse({

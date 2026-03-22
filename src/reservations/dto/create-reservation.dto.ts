@@ -11,10 +11,7 @@ const hhmmSchema = z
     return h >= 0 && h <= 23 && m >= 0 && m <= 59;
   }, 'Invalid time: hour must be 0-23, minutes must be 0-59');
 
-const timeSchema = z.union([
-  hhmmSchema,
-  z.string().datetime(),
-]);
+const timeSchema = z.union([hhmmSchema, z.string().datetime()]);
 
 export const CreateReservationSchema = z
   .object({
@@ -26,7 +23,8 @@ export const CreateReservationSchema = z
     endTime: timeSchema,
   })
   .refine(
-    (data) => parseTimeToMinutes(data.endTime) > parseTimeToMinutes(data.startTime),
+    (data) =>
+      parseTimeToMinutes(data.endTime) > parseTimeToMinutes(data.startTime),
     { message: 'endTime must be after startTime', path: ['endTime'] },
   );
 
