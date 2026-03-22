@@ -39,9 +39,21 @@ export class PlacesController {
       },
     },
   })
-  @ApiResponse({ status: 201, description: 'Place successfully created' })
-  @ApiResponse({ status: 400, description: 'Invalid input' })
-  @ApiResponse({ status: 409, description: 'A place with this name already exists' })
+  @ApiResponse({
+    status: 201,
+    description: 'Place successfully created',
+    schema: { $ref: '#/components/schemas/SuccessResponse' },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation failed',
+    schema: { $ref: '#/components/schemas/ErrorResponse' },
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'A place with this name already exists',
+    schema: { $ref: '#/components/schemas/ErrorResponse' },
+  })
   @SuccessMessage('Place created successfully', 201)
   create(@Body() createPlaceDto: CreatePlaceDto) {
     return this.placesService.create(createPlaceDto);
@@ -49,7 +61,11 @@ export class PlacesController {
 
   @Get()
   @ApiOperation({ summary: 'Get all places' })
-  @ApiResponse({ status: 200, description: 'List of all places' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of all places',
+    schema: { $ref: '#/components/schemas/SuccessResponse' },
+  })
   @SuccessMessage('Places retrieved successfully')
   findAll() {
     return this.placesService.findAll();
@@ -58,8 +74,16 @@ export class PlacesController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a place by ID' })
   @ApiParam({ name: 'id', description: 'Place ID' })
-  @ApiResponse({ status: 200, description: 'Place found' })
-  @ApiResponse({ status: 404, description: 'Place not found' })
+  @ApiResponse({
+    status: 200,
+    description: 'Place found',
+    schema: { $ref: '#/components/schemas/SuccessResponse' },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Place not found',
+    schema: { $ref: '#/components/schemas/ErrorResponse' },
+  })
   @SuccessMessage('Place retrieved successfully')
   findOne(@Param('id') id: string) {
     return this.placesService.findOne(id);
@@ -78,8 +102,16 @@ export class PlacesController {
       },
     },
   })
-  @ApiResponse({ status: 200, description: 'Place updated' })
-  @ApiResponse({ status: 404, description: 'Place not found' })
+  @ApiResponse({
+    status: 200,
+    description: 'Place updated',
+    schema: { $ref: '#/components/schemas/SuccessResponse' },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Place not found',
+    schema: { $ref: '#/components/schemas/ErrorResponse' },
+  })
   @SuccessMessage('Place updated successfully')
   update(@Param('id') id: string, @Body() updatePlaceDto: UpdatePlaceDto) {
     return this.placesService.update(id, updatePlaceDto);
@@ -88,8 +120,16 @@ export class PlacesController {
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a place' })
   @ApiParam({ name: 'id', description: 'Place ID' })
-  @ApiResponse({ status: 200, description: 'Place deleted' })
-  @ApiResponse({ status: 404, description: 'Place not found' })
+  @ApiResponse({
+    status: 200,
+    description: 'Place deleted',
+    schema: { $ref: '#/components/schemas/SuccessResponse' },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Place not found',
+    schema: { $ref: '#/components/schemas/ErrorResponse' },
+  })
   @SuccessMessage('Place deleted successfully')
   remove(@Param('id') id: string) {
     return this.placesService.remove(id);
