@@ -11,7 +11,9 @@ export const successResponseSchema = {
     success: { type: 'boolean', example: true },
     statusCode: { type: 'number', example: 200 },
     message: { type: 'string', example: 'Resource retrieved successfully' },
-    data: { description: 'Response payload - entity, array, or paginated result' },
+    data: {
+      description: 'Response payload - entity, array, or paginated result',
+    },
     timestamp: {
       type: 'string',
       format: 'date-time',

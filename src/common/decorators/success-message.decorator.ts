@@ -7,5 +7,7 @@ import {
 export const SuccessMessage = (message: string, statusCode?: number) =>
   applyDecorators(
     SetMetadata(SUCCESS_MESSAGE_KEY, message),
-    ...(statusCode !== undefined ? [SetMetadata(SUCCESS_STATUS_KEY, statusCode)] : []),
+    ...(statusCode !== undefined
+      ? [SetMetadata(SUCCESS_STATUS_KEY, statusCode)]
+      : []),
   );

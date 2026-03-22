@@ -16,4 +16,6 @@ export const CreateReservationSchema = z.object({
   endTime: timeSchema,
 });
 
-export class CreateReservationDto extends createZodDto(CreateReservationSchema) {}
+export class CreateReservationDto extends createZodDto(
+  CreateReservationSchema,
+) {}

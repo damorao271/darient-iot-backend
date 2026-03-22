@@ -6,10 +6,12 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiBody,
   ApiParam,
@@ -19,6 +21,7 @@ import { SuccessMessage } from '../common/decorators/success-message.decorator';
 import { ParseCuidPipe } from '../common/pipes/parse-cuid.pipe';
 import { SpacesService } from './spaces.service';
 import { CreateSpaceDto } from './dto/create-space.dto';
+import { SpacesQueryDto } from './dto/spaces-query.dto';
 import { UpdateSpaceDto } from './dto/update-space.dto';
 
 @ApiTags('spaces')
@@ -68,15 +71,93 @@ export class SpacesController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all spaces' })
+  @ApiOperation({ summary: 'Get all spaces (paginated)' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    required: false,
+    type: Number,
+    description: 'Items per page (default: 10, max: 100)',
+  })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    enum: ['name', 'capacity'],
+    description: 'Sort by field (default: name)',
+  })
+  @ApiQuery({
+    name: 'sortOrder',
+    required: false,
+    enum: ['asc', 'desc'],
+    description: 'Sort direction (default: asc)',
+  })
+  @ApiQuery({
+    name: 'name',
+    required: false,
+    type: String,
+    description: 'Filter by name (partial, case-insensitive match)',
+  })
+  @ApiQuery({
+    name: 'hasReservations',
+    required: false,
+    enum: ['true', 'false'],
+    description:
+      'Filter by reservation status: true = only spaces with reservations, false = only spaces without reservations',
+  })
   @ApiResponse({
     status: 200,
-    description: 'List of all spaces',
-    schema: { $ref: '#/components/schemas/SuccessResponse' },
+    description: 'Paginated list of spaces with place and reservations',
+    schema: {
+      allOf: [{ $ref: '#/components/schemas/SuccessResponse' }],
+      example: {
+        success: true,
+        statusCode: 200,
+        message: 'Spaces retrieved successfully',
+        data: {
+          items: [
+            {
+              id: 'clxxxxxxxxxxxxxxxxxxxxxxxxx',
+              placeId: 'clxxxxxxxxxxxxxxxxxxxxxxxxx',
+              name: 'Meeting Room A',
+              reference: 'MRA-01',
+              capacity: 6,
+              description: 'Main meeting room',
+              place: {
+                id: 'clxxxxxxxxxxxxxxxxxxxxxxxxx',
+                name: 'Demo Office',
+                latitude: 40.4168,
+                longitude: -3.7038,
+              },
+              reservations: [],
+            },
+          ],
+          meta: {
+            page: 1,
+            pageSize: 10,
+            total: 25,
+            totalPages: 3,
+            sortBy: 'name',
+            sortOrder: 'asc',
+          },
+        },
+        timestamp: '2026-03-21T22:00:00.000Z',
+        path: '/spaces',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation failed for query params',
+    schema: { $ref: '#/components/schemas/ErrorResponse' },
   })
   @SuccessMessage('Spaces retrieved successfully')
-  findAll() {
-    return this.spacesService.findAll();
+  findAll(@Query() query: SpacesQueryDto) {
+    return this.spacesService.findAll(query);
   }
 
   @Get(':id')
@@ -162,7 +243,10 @@ export class SpacesController {
     schema: { $ref: '#/components/schemas/ErrorResponse' },
   })
   @SuccessMessage('Space updated successfully')
-  update(@Param('id', ParseCuidPipe) id: string, @Body() updateSpaceDto: UpdateSpaceDto) {
+  update(
+    @Param('id', ParseCuidPipe) id: string,
+    @Body() updateSpaceDto: UpdateSpaceDto,
+  ) {
     return this.spacesService.update(id, updateSpaceDto);
   }
 

@@ -6,6 +6,7 @@ import {
 import type { Prisma } from '../../generated/prisma/client.js';
 import { PrismaService } from '../common/prisma/prisma.service';
 import type { CreateSpaceDto } from './dto/create-space.dto';
+import type { SpacesQuery } from './dto/spaces-query.dto';
 import type { UpdateSpaceDto } from './dto/update-space.dto';
 
 @Injectable()
@@ -42,10 +43,57 @@ export class SpacesService {
     });
   }
 
-  findAll() {
-    return this.prisma.space.findMany({
-      include: { place: true, reservations: true },
-    });
+  async findAll(query?: SpacesQuery) {
+    const page = Math.max(1, query?.page ?? 1);
+    const pageSize = Math.min(100, Math.max(1, query?.pageSize ?? 10));
+    const sortBy = query?.sortBy ?? 'name';
+    const sortOrder = query?.sortOrder ?? 'asc';
+
+    const where: Prisma.SpaceWhereInput = {};
+
+    if (query?.name?.trim()) {
+      where.name = {
+        contains: query.name.trim(),
+        mode: 'insensitive',
+      };
+    }
+
+    if (query?.hasReservations === true) {
+      where.reservations = { some: {} };
+    } else if (query?.hasReservations === false) {
+      where.reservations = { none: {} };
+    }
+
+    const skip = (page - 1) * pageSize;
+    const orderBy =
+      sortBy === 'name' ? { name: sortOrder } : { capacity: sortOrder };
+
+    const [items, total] = await Promise.all([
+      this.prisma.space.findMany({
+        where,
+        skip,
+        take: pageSize,
+        orderBy,
+        include: { place: true, reservations: true },
+      }),
+      this.prisma.space.count({ where }),
+    ]);
+
+    return {
+      items,
+      meta: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize),
+        sortBy,
+        sortOrder,
+        ...(query?.name && { name: query.name }),
+        ...(query?.hasReservations !== undefined && {
+          hasReservations: query.hasReservations,
+        }),
+      },
+    };
   }
 
   async findOne(id: string) {

@@ -24,13 +24,18 @@ export class ResponseTransformInterceptor implements NestInterceptor {
         const request = ctx.getRequest();
 
         const statusCode =
-          this.reflector.get<number>(SUCCESS_STATUS_KEY, context.getHandler()) ??
+          this.reflector.get<number>(
+            SUCCESS_STATUS_KEY,
+            context.getHandler(),
+          ) ??
           response.statusCode ??
           200;
 
         const message =
-          this.reflector.get<string>(SUCCESS_MESSAGE_KEY, context.getHandler()) ??
-          this.getDefaultMessage(request.method);
+          this.reflector.get<string>(
+            SUCCESS_MESSAGE_KEY,
+            context.getHandler(),
+          ) ?? this.getDefaultMessage(request.method);
 
         return {
           success: true,

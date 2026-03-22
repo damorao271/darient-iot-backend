@@ -12,12 +12,10 @@ function zodIssuesToDetails(
   issues: unknown,
 ): { field: string; issue: string }[] | undefined {
   if (!Array.isArray(issues)) return undefined;
-  return issues.map(
-    (i: { path?: (string | number)[]; message?: string }) => ({
-      field: Array.isArray(i.path) ? String(i.path.join('.')) : 'unknown',
-      issue: (i as { message?: string }).message ?? 'Validation error',
-    }),
-  );
+  return issues.map((i: { path?: (string | number)[]; message?: string }) => ({
+    field: Array.isArray(i.path) ? String(i.path.join('.')) : 'unknown',
+    issue: (i as { message?: string }).message ?? 'Validation error',
+  }));
 }
 
 @Catch()
