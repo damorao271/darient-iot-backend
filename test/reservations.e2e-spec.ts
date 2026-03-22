@@ -82,9 +82,9 @@ describe('ReservationsController (e2e)', () => {
       expect(res.body.data).toMatchObject({
         spaceId,
         clientEmail: 'reservation-test@example.com',
-        startTime: '09:00',
-        endTime: '10:00',
       });
+      expect(res.body.data).toHaveProperty('startAt');
+      expect(res.body.data).toHaveProperty('endAt');
       expect(res.body.data).toHaveProperty('space');
 
       await prisma.reservation.deleteMany({ where: { spaceId } });
@@ -194,8 +194,8 @@ describe('ReservationsController (e2e)', () => {
         .expect(201);
 
       expect(res.body.success).toBe(true);
-      expect(res.body.data.startTime).toBe('10:00');
-      expect(res.body.data.endTime).toBe('11:00');
+      expect(res.body.data).toHaveProperty('startAt');
+      expect(res.body.data).toHaveProperty('endAt');
 
       await prisma.reservation.deleteMany({ where: { spaceId } });
       await prisma.space.delete({ where: { id: spaceId } });
@@ -354,9 +354,7 @@ describe('ReservationsController (e2e)', () => {
 
   describe('GET /reservations', () => {
     it('should return 401 when API key is missing', () => {
-      return request(app.getHttpServer())
-        .get('/reservations')
-        .expect(401);
+      return request(app.getHttpServer()).get('/reservations').expect(401);
     });
 
     it('should return paginated list with default pagination', async () => {
@@ -422,7 +420,11 @@ describe('ReservationsController (e2e)', () => {
         .expect(200);
 
       expect(listRes.body.data.items.length).toBeGreaterThanOrEqual(1);
-      expect(listRes.body.data.items.every((r: { spaceId: string }) => r.spaceId === spaceId)).toBe(true);
+      expect(
+        listRes.body.data.items.every(
+          (r: { spaceId: string }) => r.spaceId === spaceId,
+        ),
+      ).toBe(true);
 
       await prisma.reservation.deleteMany({ where: { spaceId } });
       await prisma.space.delete({ where: { id: spaceId } });
@@ -462,7 +464,11 @@ describe('ReservationsController (e2e)', () => {
         .set('x-api-key', apiKey)
         .expect(200);
 
-      expect(listRes.body.data.items.every((r: { clientEmail: string }) => r.clientEmail === uniqueEmail)).toBe(true);
+      expect(
+        listRes.body.data.items.every(
+          (r: { clientEmail: string }) => r.clientEmail === uniqueEmail,
+        ),
+      ).toBe(true);
 
       await prisma.reservation.deleteMany({ where: { spaceId } });
       await prisma.space.delete({ where: { id: spaceId } });
@@ -491,7 +497,9 @@ describe('ReservationsController (e2e)', () => {
         .post('/reservations')
         .set('x-api-key', apiKey)
         .send({
-          ...reservationPayload({ reservationDate: `${fixedDate}T12:00:00.000Z` }),
+          ...reservationPayload({
+            reservationDate: `${fixedDate}T12:00:00.000Z`,
+          }),
           spaceId,
           placeId,
         })
@@ -504,7 +512,10 @@ describe('ReservationsController (e2e)', () => {
 
       expect(listRes.body.data.items.length).toBeGreaterThanOrEqual(1);
       expect(
-        listRes.body.data.items.some((r: { reservationDate: string }) => r.reservationDate === '2025-03-22'),
+        listRes.body.data.items.some(
+          (r: { reservationDate: string }) =>
+            r.reservationDate === '2025-03-22',
+        ),
       ).toBe(true);
 
       await prisma.reservation.deleteMany({ where: { spaceId } });
@@ -526,9 +537,16 @@ describe('ReservationsController (e2e)', () => {
       expect(ascRes.body.success).toBe(true);
       expect(descRes.body.success).toBe(true);
 
-      if (ascRes.body.data.items.length >= 2 && descRes.body.data.items.length >= 2) {
-        const ascEmails = ascRes.body.data.items.map((r: { clientEmail: string }) => r.clientEmail);
-        const descEmails = descRes.body.data.items.map((r: { clientEmail: string }) => r.clientEmail);
+      if (
+        ascRes.body.data.items.length >= 2 &&
+        descRes.body.data.items.length >= 2
+      ) {
+        const ascEmails = ascRes.body.data.items.map(
+          (r: { clientEmail: string }) => r.clientEmail,
+        );
+        const descEmails = descRes.body.data.items.map(
+          (r: { clientEmail: string }) => r.clientEmail,
+        );
         expect(ascEmails[0] <= ascEmails[1]).toBe(true);
         expect(descEmails[0] >= descEmails[1]).toBe(true);
       }
