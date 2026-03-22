@@ -10,11 +10,13 @@ import {
 } from '@nestjs/common';
 import {
   ApiOperation,
+  ApiParam,
   ApiQuery,
   ApiResponse,
   ApiSecurity,
   ApiTags,
 } from '@nestjs/swagger';
+import { ParseCuidPipe } from '../common/pipes/parse-cuid.pipe';
 import { SuccessMessage } from '../common/decorators/success-message.decorator';
 import { ReservationsService } from './reservations.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
@@ -86,10 +88,16 @@ export class ReservationsController {
   }
 
   @Get(':id')
+  @ApiParam({ name: 'id', description: 'Reservation ID (CUID)' })
   @ApiResponse({
     status: 200,
     description: 'Reservation found',
     schema: { $ref: '#/components/schemas/SuccessResponse' },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid ID format',
+    schema: { $ref: '#/components/schemas/ErrorResponse' },
   })
   @ApiResponse({
     status: 404,
@@ -97,15 +105,21 @@ export class ReservationsController {
     schema: { $ref: '#/components/schemas/ErrorResponse' },
   })
   @SuccessMessage('Reservation retrieved successfully')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseCuidPipe) id: string) {
     return this.reservationsService.findOne(id);
   }
 
   @Patch(':id')
+  @ApiParam({ name: 'id', description: 'Reservation ID (CUID)' })
   @ApiResponse({
     status: 200,
     description: 'Reservation updated',
     schema: { $ref: '#/components/schemas/SuccessResponse' },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid ID format',
+    schema: { $ref: '#/components/schemas/ErrorResponse' },
   })
   @ApiResponse({
     status: 404,
@@ -120,17 +134,29 @@ export class ReservationsController {
   })
   @SuccessMessage('Reservation updated successfully')
   update(
-    @Param('id') id: string,
+    @Param('id', ParseCuidPipe) id: string,
     @Body() updateReservationDto: UpdateReservationDto,
   ) {
     return this.reservationsService.update(id, updateReservationDto);
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete a reservation' })
+  @ApiParam({ name: 'id', description: 'Reservation ID (CUID)' })
   @ApiResponse({
     status: 200,
     description: 'Reservation deleted',
     schema: { $ref: '#/components/schemas/SuccessResponse' },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid ID format',
+    schema: { $ref: '#/components/schemas/ErrorResponse' },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'API key missing or invalid',
+    schema: { $ref: '#/components/schemas/ErrorResponse' },
   })
   @ApiResponse({
     status: 404,
@@ -138,7 +164,7 @@ export class ReservationsController {
     schema: { $ref: '#/components/schemas/ErrorResponse' },
   })
   @SuccessMessage('Reservation deleted successfully')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseCuidPipe) id: string) {
     return this.reservationsService.remove(id);
   }
 }
