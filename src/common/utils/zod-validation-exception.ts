@@ -1,7 +1,9 @@
 import { BadRequestException } from '@nestjs/common';
 import { HttpStatus } from '@nestjs/common';
 
-export function createZodValidationException(error: unknown): BadRequestException {
+export function createZodValidationException(
+  error: unknown,
+): BadRequestException {
   const issues =
     error &&
     typeof error === 'object' &&

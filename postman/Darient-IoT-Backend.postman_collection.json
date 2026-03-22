@@ -238,11 +238,19 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/spaces",
+              "raw": "{{base_url}}/spaces?page=1&pageSize=10&sortBy=name&sortOrder=asc",
               "host": ["{{base_url}}"],
-              "path": ["spaces"]
+              "path": ["spaces"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" },
+                { "key": "sortBy", "value": "name" },
+                { "key": "sortOrder", "value": "asc" },
+                { "key": "name", "value": "", "disabled": true },
+                { "key": "hasReservations", "value": "", "disabled": true }
+              ]
             },
-            "description": "List all spaces"
+            "description": "Paginated list of spaces. Optional: page, pageSize, sortBy (name|capacity), sortOrder (asc|desc), name (partial search), hasReservations (true|false)"
           }
         },
         {

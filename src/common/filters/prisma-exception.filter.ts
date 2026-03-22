@@ -46,13 +46,12 @@ export class PrismaExceptionFilter implements ExceptionFilter {
 
     const { code } = exception;
 
-    const mapped =
-      PRISMA_ERROR_MAP[code] ?? {
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'An unexpected database error occurred',
-        error: 'Internal Server Error',
-        errorCode: 'ERR_DB_ERROR',
-      };
+    const mapped = PRISMA_ERROR_MAP[code] ?? {
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      message: 'An unexpected database error occurred',
+      error: 'Internal Server Error',
+      errorCode: 'ERR_DB_ERROR',
+    };
 
     let message = mapped.message;
     if (code === 'P2000') {
