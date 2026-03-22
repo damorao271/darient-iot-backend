@@ -259,8 +259,18 @@ export class SpacesController {
     schema: { $ref: '#/components/schemas/SuccessResponse' },
   })
   @ApiResponse({
+    status: 400,
+    description: 'Invalid ID format',
+    schema: { $ref: '#/components/schemas/ErrorResponse' },
+  })
+  @ApiResponse({
     status: 404,
     description: 'Space not found',
+    schema: { $ref: '#/components/schemas/ErrorResponse' },
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Cannot delete space with active reservations',
     schema: { $ref: '#/components/schemas/ErrorResponse' },
   })
   @SuccessMessage('Space deleted successfully')
