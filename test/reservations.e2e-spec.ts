@@ -644,4 +644,83 @@ describe('ReservationsController (e2e)', () => {
       await prisma.place.delete({ where: { id: placeId } });
     });
   });
+
+  describe('DELETE /reservations/:id', () => {
+    it('should delete a reservation and return 200', async () => {
+      const placeRes = await request(app.getHttpServer())
+        .post('/places')
+        .set('x-api-key', apiKey)
+        .send(validPlace)
+        .expect(201);
+
+      const placeId = placeRes.body.data.id;
+
+      const spaceRes = await request(app.getHttpServer())
+        .post('/spaces')
+        .set('x-api-key', apiKey)
+        .send({ ...validSpace, placeId })
+        .expect(201);
+
+      const spaceId = spaceRes.body.data.id;
+
+      const createRes = await request(app.getHttpServer())
+        .post('/reservations')
+        .set('x-api-key', apiKey)
+        .send({
+          ...reservationPayload(),
+          spaceId,
+          placeId,
+        })
+        .expect(201);
+
+      const reservationId = createRes.body.data.id;
+
+      const deleteRes = await request(app.getHttpServer())
+        .delete(`/reservations/${reservationId}`)
+        .set('x-api-key', apiKey)
+        .expect(200);
+
+      expect(deleteRes.body.success).toBe(true);
+      expect(deleteRes.body.statusCode).toBe(200);
+      expect(deleteRes.body.message).toBe('Reservation deleted successfully');
+      expect(deleteRes.body.data).toMatchObject({ id: reservationId });
+
+      await prisma.space.delete({ where: { id: spaceId } });
+      await prisma.place.delete({ where: { id: placeId } });
+    });
+
+    it('should return 404 when reservation does not exist', () => {
+      const nonExistentId = 'clp00000000000000000000000';
+
+      return request(app.getHttpServer())
+        .delete(`/reservations/${nonExistentId}`)
+        .set('x-api-key', apiKey)
+        .expect(404)
+        .expect((res) => {
+          expect(res.body.success).toBe(false);
+          expect(res.body.statusCode).toBe(404);
+          expect(res.body.message).toBe('Reservation not found');
+          expect(res.body.errorCode).toBe('ERR_RESERVATION_NOT_FOUND');
+        });
+    });
+
+    it('should return 400 for invalid ID format', () => {
+      return request(app.getHttpServer())
+        .delete('/reservations/invalid-id')
+        .set('x-api-key', apiKey)
+        .expect(400)
+        .expect((res) => {
+          expect(res.body.success).toBe(false);
+          expect(res.body.statusCode).toBe(400);
+          expect(res.body.message).toBe('Invalid ID format');
+          expect(res.body.errorCode).toBe('ERR_INVALID_ID');
+        });
+    });
+
+    it('should return 401 when API key is missing', () => {
+      return request(app.getHttpServer())
+        .delete('/reservations/clp7x3k4e0000qy5y5y5y5y5y')
+        .expect(401);
+    });
+  });
 });
