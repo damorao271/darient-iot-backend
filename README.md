@@ -71,6 +71,7 @@ Swagger UI provides interactive API documentation to explore and test endpoints.
 
 1. Start the application (Docker or `npm run start:dev`).
 2. Open your browser at [http://localhost:3000/api](http://localhost:3000/api).
+3. In the authorize section, enter the API key that is in the `.env` file. as `API_KEY`.
 
 ### Testing endpoints
 
