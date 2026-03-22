@@ -16,6 +16,7 @@ import {
   ApiSecurity,
 } from '@nestjs/swagger';
 import { SuccessMessage } from '../common/decorators/success-message.decorator';
+import { ParseCuidPipe } from '../common/pipes/parse-cuid.pipe';
 import { SpacesService } from './spaces.service';
 import { CreateSpaceDto } from './dto/create-space.dto';
 import { UpdateSpaceDto } from './dto/update-space.dto';
@@ -84,7 +85,36 @@ export class SpacesController {
   @ApiResponse({
     status: 200,
     description: 'Space found',
-    schema: { $ref: '#/components/schemas/SuccessResponse' },
+    schema: {
+      allOf: [{ $ref: '#/components/schemas/SuccessResponse' }],
+      example: {
+        success: true,
+        statusCode: 200,
+        message: 'Space retrieved successfully',
+        data: {
+          id: 'clxxxxxxxxxxxxxxxxxxxxxxxxx',
+          placeId: 'clxxxxxxxxxxxxxxxxxxxxxxxxx',
+          name: 'Meeting Room A',
+          reference: 'MRA-01',
+          capacity: 6,
+          description: 'Main meeting room',
+          place: {
+            id: 'clxxxxxxxxxxxxxxxxxxxxxxxxx',
+            name: 'Demo Office',
+            latitude: 40.4168,
+            longitude: -3.7038,
+          },
+          reservations: [],
+        },
+        timestamp: '2026-03-21T22:00:00.000Z',
+        path: '/spaces/clxxxxxxxxxxxxxxxxxxxxxxxxx',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid ID format',
+    schema: { $ref: '#/components/schemas/ErrorResponse' },
   })
   @ApiResponse({
     status: 404,
@@ -92,7 +122,7 @@ export class SpacesController {
     schema: { $ref: '#/components/schemas/ErrorResponse' },
   })
   @SuccessMessage('Space retrieved successfully')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseCuidPipe) id: string) {
     return this.spacesService.findOne(id);
   }
 
@@ -132,7 +162,7 @@ export class SpacesController {
     schema: { $ref: '#/components/schemas/ErrorResponse' },
   })
   @SuccessMessage('Space updated successfully')
-  update(@Param('id') id: string, @Body() updateSpaceDto: UpdateSpaceDto) {
+  update(@Param('id', ParseCuidPipe) id: string, @Body() updateSpaceDto: UpdateSpaceDto) {
     return this.spacesService.update(id, updateSpaceDto);
   }
 
@@ -150,7 +180,7 @@ export class SpacesController {
     schema: { $ref: '#/components/schemas/ErrorResponse' },
   })
   @SuccessMessage('Space deleted successfully')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseCuidPipe) id: string) {
     return this.spacesService.remove(id);
   }
 }

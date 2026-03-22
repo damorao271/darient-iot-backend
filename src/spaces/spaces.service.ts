@@ -48,11 +48,18 @@ export class SpacesService {
     });
   }
 
-  findOne(id: string) {
-    return this.prisma.space.findUniqueOrThrow({
+  async findOne(id: string) {
+    const space = await this.prisma.space.findUnique({
       where: { id },
       include: { place: true, reservations: true },
     });
+    if (!space) {
+      throw new NotFoundException({
+        message: 'Space not found',
+        errorCode: 'ERR_SPACE_NOT_FOUND',
+      });
+    }
+    return space;
   }
 
   async update(id: string, updateSpaceDto: UpdateSpaceDto) {
