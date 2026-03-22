@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { ApiKeyGuard } from './common/guards/api-key.guard';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 import { PlacesModule } from './places/places.module';
 import { SpacesModule } from './spaces/spaces.module';
 import { ReservationsModule } from './reservations/reservations.module';
@@ -22,6 +23,10 @@ import { ReservationsModule } from './reservations/reservations.module';
     {
       provide: APP_GUARD,
       useClass: ApiKeyGuard,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: PrismaExceptionFilter,
     },
     {
       provide: APP_FILTER,
