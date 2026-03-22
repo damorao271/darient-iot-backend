@@ -160,7 +160,23 @@ export class SpacesService {
     });
   }
 
-  remove(id: string) {
+  async remove(id: string) {
+    const space = await this.prisma.space.findUnique({
+      where: { id },
+      include: { reservations: true },
+    });
+    if (!space) {
+      throw new NotFoundException({
+        message: 'Space not found',
+        errorCode: 'ERR_SPACE_NOT_FOUND',
+      });
+    }
+    if (space.reservations.length > 0) {
+      throw new ConflictException({
+        message: 'Cannot delete space with active reservations',
+        errorCode: 'ERR_SPACE_HAS_RESERVATIONS',
+      });
+    }
     return this.prisma.space.delete({
       where: { id },
     });

@@ -231,4 +231,117 @@ describe('SpacesController (e2e)', () => {
         .expect(401);
     });
   });
+
+  describe('DELETE /spaces/:id', () => {
+    it('should return 200 when deleting a space without reservations', async () => {
+      const placeRes = await request(app.getHttpServer())
+        .post('/places')
+        .set('x-api-key', apiKey)
+        .send(validPlace)
+        .expect(201);
+
+      const placeId = placeRes.body.data.id;
+
+      const createRes = await request(app.getHttpServer())
+        .post('/spaces')
+        .set('x-api-key', apiKey)
+        .send({ ...validSpace, placeId })
+        .expect(201);
+
+      const spaceId = createRes.body.data.id;
+
+      const deleteRes = await request(app.getHttpServer())
+        .delete(`/spaces/${spaceId}`)
+        .set('x-api-key', apiKey)
+        .expect(200);
+
+      expect(deleteRes.body.success).toBe(true);
+      expect(deleteRes.body.statusCode).toBe(200);
+      expect(deleteRes.body.message).toBe('Space deleted successfully');
+
+      await prisma.place.delete({ where: { id: placeId } });
+    });
+
+    it('should return 409 when deleting a space with reservations', async () => {
+      const placeRes = await request(app.getHttpServer())
+        .post('/places')
+        .set('x-api-key', apiKey)
+        .send(validPlace)
+        .expect(201);
+
+      const placeId = placeRes.body.data.id;
+
+      const createRes = await request(app.getHttpServer())
+        .post('/spaces')
+        .set('x-api-key', apiKey)
+        .send({ ...validSpace, placeId })
+        .expect(201);
+
+      const spaceId = createRes.body.data.id;
+
+      await request(app.getHttpServer())
+        .post('/reservations')
+        .set('x-api-key', apiKey)
+        .send({
+          spaceId,
+          placeId,
+          clientEmail: 'test@example.com',
+          reservationDate: new Date().toISOString(),
+          startTime: '09:00',
+          endTime: '10:00',
+        })
+        .expect(201);
+
+      await request(app.getHttpServer())
+        .delete(`/spaces/${spaceId}`)
+        .set('x-api-key', apiKey)
+        .expect(409)
+        .expect((res) => {
+          expect(res.body.success).toBe(false);
+          expect(res.body.statusCode).toBe(409);
+          expect(res.body.message).toBe(
+            'Cannot delete space with active reservations',
+          );
+          expect(res.body.errorCode).toBe('ERR_SPACE_HAS_RESERVATIONS');
+        });
+
+      await prisma.reservation.deleteMany({ where: { spaceId } });
+      await prisma.space.delete({ where: { id: spaceId } });
+      await prisma.place.delete({ where: { id: placeId } });
+    });
+
+    it('should return 404 when space does not exist', async () => {
+      const nonExistentId = 'clp00000000000000000000000';
+
+      return request(app.getHttpServer())
+        .delete(`/spaces/${nonExistentId}`)
+        .set('x-api-key', apiKey)
+        .expect(404)
+        .expect((res) => {
+          expect(res.body.success).toBe(false);
+          expect(res.body.statusCode).toBe(404);
+          expect(res.body.message).toBe('Space not found');
+          expect(res.body.errorCode).toBe('ERR_SPACE_NOT_FOUND');
+        });
+    });
+
+    it('should return 400 for invalid ID format', () => {
+      return request(app.getHttpServer())
+        .delete('/spaces/invalid-id')
+        .set('x-api-key', apiKey)
+        .expect(400)
+        .expect((res) => {
+          expect(res.body.success).toBe(false);
+          expect(res.body.statusCode).toBe(400);
+          expect(res.body.message).toBe('Invalid ID format');
+          expect(res.body.errorCode).toBe('ERR_INVALID_ID');
+        });
+    });
+
+    it('should return 401 when API key is missing', () => {
+      return request(app.getHttpServer())
+        .delete('/spaces/clp7x3k4e0000qy5y5y5y5y5y')
+        .expect(401);
+    });
+  });
 });
