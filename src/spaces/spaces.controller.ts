@@ -34,6 +34,11 @@ export class SpacesController {
     description: 'Place not found',
     schema: { $ref: '#/components/schemas/ErrorResponse' },
   })
+  @ApiResponse({
+    status: 409,
+    description: 'A space with this name already exists in this place',
+    schema: { $ref: '#/components/schemas/ErrorResponse' },
+  })
   @SuccessMessage('Space created successfully', 201)
   create(@Body() createSpaceDto: CreateSpaceDto) {
     return this.spacesService.create(createSpaceDto);
