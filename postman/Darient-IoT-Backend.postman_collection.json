@@ -332,10 +332,12 @@
                 "exec": [
                   "if (pm.response.code === 201) {",
                   "    const json = pm.response.json();",
-                  "    if (json.id) {",
-                  "        pm.collectionVariables.set('reservation_id', json.id);",
+                  "    const id = json.data?.id || json.id;",
+                  "    if (id) {",
+                  "        pm.collectionVariables.set('reservation_id', id);",
                   "    }",
-                  "}"
+                  "}",
+                  "pm.test('Status code is 201', () => pm.response.to.have.status(201));"
                 ],
                 "type": "text/javascript"
               }
@@ -345,8 +347,8 @@
             "method": "POST",
             "header": [
               {
-                "key": "Authorization",
-                "value": "Bearer {{api_key}}",
+                "key": "x-api-key",
+                "value": "{{api_key}}",
                 "type": "text"
               },
               {
@@ -356,14 +358,240 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"spaceId\": \"{{space_id}}\",\n  \"placeId\": \"{{place_id}}\",\n  \"clientEmail\": \"client@example.com\",\n  \"reservationDate\": \"2025-03-25\",\n  \"startTime\": \"09:00\",\n  \"endTime\": \"11:00\"\n}"
+              "raw": "{\n  \"spaceId\": \"{{space_id}}\",\n  \"placeId\": \"{{place_id}}\",\n  \"clientEmail\": \"client@example.com\",\n  \"reservationDate\": \"2025-03-25T00:00:00.000Z\",\n  \"startTime\": \"09:00\",\n  \"endTime\": \"10:00\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/reservations",
               "host": ["{{base_url}}"],
               "path": ["reservations"]
             },
-            "description": "Create a new reservation. Required: spaceId (CUID), clientEmail, reservationDate, startTime, endTime. Optional: placeId"
+            "description": "Create a new reservation. Required: spaceId (CUID), clientEmail, reservationDate (ISO datetime), startTime (HH:mm), endTime (HH:mm). Optional: placeId.\n\nBusiness rules: No schedule overlap for same space (back-to-back OK); max 3 reservations per week (Mon-Sun) per client."
+          }
+        },
+        {
+          "name": "Create Reservation - Back-to-Back (2nd slot)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Back-to-back allowed (10:00 starts when 09:00-10:00 ends)', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.data?.startTime).to.eql('10:00');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spaceId\": \"{{space_id}}\",\n  \"placeId\": \"{{place_id}}\",\n  \"clientEmail\": \"client@example.com\",\n  \"reservationDate\": \"2025-03-25T00:00:00.000Z\",\n  \"startTime\": \"10:00\",\n  \"endTime\": \"11:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["reservations"]
+            },
+            "description": "Run after 'Create Reservation' (09:00-10:00). Border case: one slot starts exactly when another ends - should succeed (201)."
+          }
+        },
+        {
+          "name": "Create Reservation - Schedule Conflict (expect 409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 409 Conflict', () => pm.response.to.have.status(409));",
+                  "pm.test('Error is ERR_SCHEDULE_CONFLICT', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.errorCode).to.eql('ERR_SCHEDULE_CONFLICT');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spaceId\": \"{{space_id}}\",\n  \"placeId\": \"{{place_id}}\",\n  \"clientEmail\": \"client@example.com\",\n  \"reservationDate\": \"2025-03-25T00:00:00.000Z\",\n  \"startTime\": \"09:30\",\n  \"endTime\": \"10:30\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["reservations"]
+            },
+            "description": "Run after 'Create Reservation' (09:00-10:00). Overlapping times (09:30-10:30) - should fail with 409 ERR_SCHEDULE_CONFLICT."
+          }
+        },
+        {
+          "name": "Create Reservation - Limit Exceeded (4th in week, expect 409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 409 Conflict', () => pm.response.to.have.status(409));",
+                  "pm.test('Error is ERR_RESERVATION_LIMIT', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.errorCode).to.eql('ERR_RESERVATION_LIMIT');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spaceId\": \"{{space_id}}\",\n  \"placeId\": \"{{place_id}}\",\n  \"clientEmail\": \"limit-test@example.com\",\n  \"reservationDate\": \"2025-03-27T00:00:00.000Z\",\n  \"startTime\": \"14:00\",\n  \"endTime\": \"15:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["reservations"]
+            },
+            "description": "Run after creating 3 reservations for limit-test@example.com in the same week (Mon 24, Tue 25, Wed 26 Mar 2025). 4th on Thu 27 - should fail with 409 ERR_RESERVATION_LIMIT."
+          }
+        },
+        {
+          "name": "Create Reservation - Week 1-3 (for limit test)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{api_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spaceId\": \"{{space_id}}\",\n  \"placeId\": \"{{place_id}}\",\n  \"clientEmail\": \"limit-test@example.com\",\n  \"reservationDate\": \"2025-03-24T00:00:00.000Z\",\n  \"startTime\": \"09:00\",\n  \"endTime\": \"10:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["reservations"]
+            },
+            "description": "1st of 3 reservations (Mon Mar 24). Run this, then Tue/Wed requests, then 'Limit Exceeded' for 4th."
+          }
+        },
+        {
+          "name": "Create Reservation - Limit Test 2 (Tue)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "x-api-key", "value": "{{api_key}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spaceId\": \"{{space_id}}\",\n  \"placeId\": \"{{place_id}}\",\n  \"clientEmail\": \"limit-test@example.com\",\n  \"reservationDate\": \"2025-03-25T00:00:00.000Z\",\n  \"startTime\": \"10:00\",\n  \"endTime\": \"11:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["reservations"]
+            },
+            "description": "2nd of 3 reservations (Tue Mar 25) for limit-test@example.com."
+          }
+        },
+        {
+          "name": "Create Reservation - Limit Test 3 (Wed)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "x-api-key", "value": "{{api_key}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"spaceId\": \"{{space_id}}\",\n  \"placeId\": \"{{place_id}}\",\n  \"clientEmail\": \"limit-test@example.com\",\n  \"reservationDate\": \"2025-03-26T00:00:00.000Z\",\n  \"startTime\": \"11:00\",\n  \"endTime\": \"12:00\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["reservations"]
+            },
+            "description": "3rd of 3 reservations (Wed Mar 26). After this, run 'Limit Exceeded' to get 409."
           }
         },
         {
@@ -371,11 +599,7 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{api_key}}",
-                "type": "text"
-              }
+              { "key": "x-api-key", "value": "{{api_key}}", "type": "text" }
             ],
             "url": {
               "raw": "{{base_url}}/reservations?page=1&pageSize=10",
@@ -402,11 +626,7 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{api_key}}",
-                "type": "text"
-              }
+              { "key": "x-api-key", "value": "{{api_key}}", "type": "text" }
             ],
             "url": {
               "raw": "{{base_url}}/reservations/{{reservation_id}}",
@@ -421,11 +641,7 @@
           "request": {
             "method": "PATCH",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{api_key}}",
-                "type": "text"
-              },
+              { "key": "x-api-key", "value": "{{api_key}}", "type": "text" },
               {
                 "key": "Content-Type",
                 "value": "application/json"
@@ -448,11 +664,7 @@
           "request": {
             "method": "DELETE",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{api_key}}",
-                "type": "text"
-              }
+              { "key": "x-api-key", "value": "{{api_key}}", "type": "text" }
             ],
             "url": {
               "raw": "{{base_url}}/reservations/{{reservation_id}}",

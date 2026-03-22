@@ -36,6 +36,12 @@ export class ReservationsController {
     description: 'Space not found',
     schema: { $ref: '#/components/schemas/ErrorResponse' },
   })
+  @ApiResponse({
+    status: 409,
+    description:
+      'Schedule conflict (space already reserved) or client exceeded 3 reservations per week',
+    schema: { $ref: '#/components/schemas/ErrorResponse' },
+  })
   @SuccessMessage('Reservation created successfully', 201)
   create(@Body() createReservationDto: CreateReservationDto) {
     return this.reservationsService.create(createReservationDto);
@@ -76,7 +82,13 @@ export class ReservationsController {
   })
   @ApiResponse({
     status: 404,
-    description: 'Reservation not found',
+    description: 'Reservation or space not found',
+    schema: { $ref: '#/components/schemas/ErrorResponse' },
+  })
+  @ApiResponse({
+    status: 409,
+    description:
+      'Schedule conflict, invalid time range, or client exceeded 3 reservations per week',
     schema: { $ref: '#/components/schemas/ErrorResponse' },
   })
   @SuccessMessage('Reservation updated successfully')
