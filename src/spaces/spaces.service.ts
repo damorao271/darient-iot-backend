@@ -14,7 +14,11 @@ const MAX_UPCOMING_RESERVATIONS = 3;
 function getSpaceInclude(now: Date = new Date()) {
   return {
     place: true,
-    _count: { select: { reservations: true } },
+    _count: {
+      select: {
+        reservations: { where: { startAt: { gt: now } } },
+      },
+    },
     reservations: {
       where: { startAt: { gt: now } },
       orderBy: { startAt: 'asc' as const },

@@ -7,6 +7,10 @@
   },
   "variable": [
     {
+      "key": "api_key",
+      "value": ""
+    },
+    {
       "key": "base_url",
       "value": "http://localhost:3000"
     },
@@ -92,7 +96,7 @@
               "host": ["{{base_url}}"],
               "path": ["places"]
             },
-            "description": "Create a new place. Required: name, latitude (-90 to 90), longitude (-180 to 180). Optional: timezone (IANA, e.g. Europe/Madrid; default UTC)"
+            "description": "Create a new place. Required: name, latitude (-90 to 90), longitude (-180 to 180). Optional: timezone (IANA, e.g. Europe/Madrid; default UTC). Response includes spaceCount, totalCapacity."
           }
         },
         {
@@ -111,7 +115,7 @@
               "host": ["{{base_url}}"],
               "path": ["places"]
             },
-            "description": "List all places"
+            "description": "List all places. Each item includes spaceCount and totalCapacity."
           }
         },
         {
@@ -130,7 +134,7 @@
               "host": ["{{base_url}}"],
               "path": ["places", "{{place_id}}"]
             },
-            "description": "Get a single place by ID"
+            "description": "Get a single place by ID. Response includes spaceCount and totalCapacity."
           }
         },
         {
@@ -155,7 +159,7 @@
                 { "key": "sortOrder", "value": "asc" }
               ]
             },
-            "description": "Paginated list of spaces belonging to a place. Returns { place, items, meta } - place includes totalSpaces; items have no placeId/place; reservations have no spaceId/placeId. Optional: page, pageSize (max 100), sortBy (name|capacity), sortOrder (asc|desc). 404 if place not found."
+            "description": "Paginated list of spaces belonging to a place. Returns { place, items, meta }: place includes totalSpaces; each item has reservationCount and up to 3 upcoming reservations (startAt > now); reservations omit spaceId/placeId. Query: page, pageSize (max 100), sortBy (name|capacity), sortOrder (asc|desc). 404 if place not found."
           }
         },
         {
