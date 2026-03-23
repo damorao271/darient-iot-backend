@@ -103,7 +103,8 @@ export class PlacesController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Paginated list of spaces belonging to the place',
+    description:
+    'Paginated list of spaces belonging to the place (up to 3 upcoming reservations per space)',
     schema: {
       allOf: [{ $ref: '#/components/schemas/SuccessResponse' }],
       example: {
@@ -130,6 +131,7 @@ export class PlacesController {
               description: 'Main meeting room',
               createdAt: '2026-03-21T22:00:00.000Z',
               updatedAt: '2026-03-21T22:00:00.000Z',
+              reservationCount: 3,
               reservations: [
                 {
                   id: 'clxxxxxxxxxxxxxxxxxxxxxxxxx',

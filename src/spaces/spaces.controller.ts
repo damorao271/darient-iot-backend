@@ -111,7 +111,8 @@ export class SpacesController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Paginated list of spaces with place and reservations',
+    description:
+    'Paginated list of spaces with place and up to 3 upcoming reservations (future only)',
     schema: {
       allOf: [{ $ref: '#/components/schemas/SuccessResponse' }],
       example: {
@@ -133,6 +134,7 @@ export class SpacesController {
                 latitude: 40.4168,
                 longitude: -3.7038,
               },
+              reservationCount: 0,
               reservations: [],
             },
           ],
@@ -185,6 +187,7 @@ export class SpacesController {
             latitude: 40.4168,
             longitude: -3.7038,
           },
+          reservationCount: 0,
           reservations: [],
         },
         timestamp: '2026-03-21T22:00:00.000Z',

@@ -18,6 +18,13 @@ function omitKeys<T extends object, K extends keyof T>(
   return result as Omit<T, K>;
 }
 
+function serializePlace<T extends { _count: { spaces: number } }>(
+  place: T,
+): Omit<T, '_count'> & { spaceCount: number } {
+  const { _count, ...rest } = place;
+  return { ...rest, spaceCount: _count.spaces };
+}
+
 @Injectable()
 export class PlacesService {
   constructor(private readonly prisma: PrismaService) {}
@@ -33,28 +40,31 @@ export class PlacesService {
       });
     }
 
-    return this.prisma.place.create({
+    const created = await this.prisma.place.create({
       data: {
         name: createPlaceDto.name,
         latitude: createPlaceDto.latitude,
         longitude: createPlaceDto.longitude,
         ...(createPlaceDto.timezone && { timezone: createPlaceDto.timezone }),
       },
-      include: { spaces: true },
+      include: { _count: { select: { spaces: true } } },
     });
+    return serializePlace(created);
   }
 
-  findAll() {
-    return this.prisma.place.findMany({
-      include: { spaces: true },
+  async findAll() {
+    const places = await this.prisma.place.findMany({
+      include: { _count: { select: { spaces: true } } },
     });
+    return places.map(serializePlace);
   }
 
-  findOne(id: string) {
-    return this.prisma.place.findUniqueOrThrow({
+  async findOne(id: string) {
+    const place = await this.prisma.place.findUniqueOrThrow({
       where: { id },
-      include: { spaces: true },
+      include: { _count: { select: { spaces: true } } },
     });
+    return serializePlace(place);
   }
 
   async findSpacesByPlaceId(placeId: string, query?: PlacesSpacesQuery) {
@@ -86,6 +96,7 @@ export class PlacesService {
       sortBy === 'name' ? { name: sortOrder } : { capacity: sortOrder };
 
     const where = { placeId };
+    const now = new Date();
 
     const [spaces, total] = await Promise.all([
       this.prisma.space.findMany({
@@ -93,18 +104,24 @@ export class PlacesService {
         skip,
         take: pageSize,
         orderBy,
-        include: { reservations: true },
+        include: {
+          _count: { select: { reservations: true } },
+          reservations: {
+            where: { startAt: { gt: now } },
+            orderBy: { startAt: 'asc' as const },
+            take: 3,
+          },
+        },
       }),
       this.prisma.space.count({ where }),
     ]);
 
     return {
       place: { ...place, totalSpaces: total },
-      items: spaces.map((space) => ({
+      items: spaces.map(({ _count, reservations, ...space }) => ({
         ...omitKeys(space, ['placeId']),
-        reservations: space.reservations.map((r) =>
-          omitKeys(r, ['spaceId', 'placeId']),
-        ),
+        reservationCount: _count.reservations,
+        reservations,
       })),
       meta: {
         page,
