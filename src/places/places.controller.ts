@@ -6,10 +6,12 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiBody,
   ApiParam,
@@ -18,6 +20,7 @@ import {
 import { SuccessMessage } from '../common/decorators/success-message.decorator';
 import { PlacesService } from './places.service';
 import { CreatePlaceDto } from './dto/create-place.dto';
+import { PlacesSpacesQueryDto } from './dto/places-spaces-query.dto';
 import { UpdatePlaceDto } from './dto/update-place.dto';
 
 @ApiTags('places')
@@ -72,11 +75,35 @@ export class PlacesController {
   }
 
   @Get(':placeId/spaces')
-  @ApiOperation({ summary: 'Get all spaces for a place' })
+  @ApiOperation({ summary: 'Get all spaces for a place (paginated)' })
   @ApiParam({ name: 'placeId', description: 'Place ID (CUID)' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'pageSize',
+    required: false,
+    type: Number,
+    description: 'Items per page (default: 10, max: 100)',
+  })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    enum: ['name', 'capacity'],
+    description: 'Sort by field (default: name)',
+  })
+  @ApiQuery({
+    name: 'sortOrder',
+    required: false,
+    enum: ['asc', 'desc'],
+    description: 'Sort direction (default: asc)',
+  })
   @ApiResponse({
     status: 200,
-    description: 'List of spaces belonging to the place',
+    description: 'Paginated list of spaces belonging to the place',
     schema: {
       allOf: [{ $ref: '#/components/schemas/SuccessResponse' }],
       example: {
@@ -92,8 +119,9 @@ export class PlacesController {
             timezone: 'Europe/Madrid',
             createdAt: '2026-03-21T22:00:00.000Z',
             updatedAt: '2026-03-21T22:00:00.000Z',
+            totalSpaces: 5,
           },
-          spaces: [
+          items: [
             {
               id: 'clxxxxxxxxxxxxxxxxxxxxxxxxx',
               name: 'Meeting Room A',
@@ -114,6 +142,14 @@ export class PlacesController {
               ],
             },
           ],
+          meta: {
+            page: 1,
+            pageSize: 10,
+            total: 5,
+            totalPages: 1,
+            sortBy: 'name',
+            sortOrder: 'asc',
+          },
         },
         timestamp: '2026-03-21T22:00:00.000Z',
         path: '/places/clxxxxxxxxxxxxxxxxxxxxxxxxx/spaces',
@@ -126,8 +162,11 @@ export class PlacesController {
     schema: { $ref: '#/components/schemas/ErrorResponse' },
   })
   @SuccessMessage('Spaces retrieved successfully')
-  findSpacesByPlaceId(@Param('placeId') placeId: string) {
-    return this.placesService.findSpacesByPlaceId(placeId);
+  findSpacesByPlaceId(
+    @Param('placeId') placeId: string,
+    @Query() query: PlacesSpacesQueryDto,
+  ) {
+    return this.placesService.findSpacesByPlaceId(placeId, query);
   }
 
   @Get(':id')

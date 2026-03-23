@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 import type { CreatePlaceDto } from './dto/create-place.dto';
+import type { PlacesSpacesQuery } from './dto/places-spaces-query.dto';
 import type { UpdatePlaceDto } from './dto/update-place.dto';
 
 function omitKeys<T extends object, K extends keyof T>(
@@ -56,7 +57,7 @@ export class PlacesService {
     });
   }
 
-  async findSpacesByPlaceId(placeId: string) {
+  async findSpacesByPlaceId(placeId: string, query?: PlacesSpacesQuery) {
     const place = await this.prisma.place.findUnique({
       where: { id: placeId },
       select: {
@@ -67,10 +68,6 @@ export class PlacesService {
         timezone: true,
         createdAt: true,
         updatedAt: true,
-        spaces: {
-          include: { reservations: true },
-          orderBy: { name: 'asc' },
-        },
       },
     });
     if (!place) {
@@ -79,15 +76,44 @@ export class PlacesService {
         errorCode: 'ERR_PLACE_NOT_FOUND',
       });
     }
-    const { spaces, ...placeData } = place;
+
+    const page = Math.max(1, query?.page ?? 1);
+    const pageSize = Math.min(100, Math.max(1, query?.pageSize ?? 10));
+    const sortBy = query?.sortBy ?? 'name';
+    const sortOrder = query?.sortOrder ?? 'asc';
+    const skip = (page - 1) * pageSize;
+    const orderBy =
+      sortBy === 'name' ? { name: sortOrder } : { capacity: sortOrder };
+
+    const where = { placeId };
+
+    const [spaces, total] = await Promise.all([
+      this.prisma.space.findMany({
+        where,
+        skip,
+        take: pageSize,
+        orderBy,
+        include: { reservations: true },
+      }),
+      this.prisma.space.count({ where }),
+    ]);
+
     return {
-      place: placeData,
-      spaces: spaces.map((space) => ({
+      place: { ...place, totalSpaces: total },
+      items: spaces.map((space) => ({
         ...omitKeys(space, ['placeId']),
         reservations: space.reservations.map((r) =>
           omitKeys(r, ['spaceId', 'placeId']),
         ),
       })),
+      meta: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize),
+        sortBy,
+        sortOrder,
+      },
     };
   }
 
