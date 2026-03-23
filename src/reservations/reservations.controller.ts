@@ -80,7 +80,7 @@ export class ReservationsController {
     name: 'sortOrder',
     required: false,
     enum: ['asc', 'desc'],
-    description: 'Sort direction (default: desc)',
+    description: 'Sort direction (default: asc)',
   })
   @ApiQuery({
     name: 'spaceId',

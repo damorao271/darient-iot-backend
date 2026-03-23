@@ -93,7 +93,7 @@ export class PlacesService {
         skip,
         take: pageSize,
         orderBy,
-        include: { reservations: true },
+        include: { reservations: { orderBy: { startAt: 'asc' } } },
       }),
       this.prisma.space.count({ where }),
     ]);

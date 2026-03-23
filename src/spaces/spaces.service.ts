@@ -39,7 +39,10 @@ export class SpacesService {
 
     return this.prisma.space.create({
       data: createSpaceDto as Prisma.SpaceUncheckedCreateInput,
-      include: { place: true, reservations: true },
+      include: {
+        place: true,
+        reservations: { orderBy: { startAt: 'asc' } },
+      },
     });
   }
 
@@ -74,7 +77,10 @@ export class SpacesService {
         skip,
         take: pageSize,
         orderBy,
-        include: { place: true, reservations: true },
+        include: {
+          place: true,
+          reservations: { orderBy: { startAt: 'asc' } },
+        },
       }),
       this.prisma.space.count({ where }),
     ]);
@@ -99,7 +105,10 @@ export class SpacesService {
   async findOne(id: string) {
     const space = await this.prisma.space.findUnique({
       where: { id },
-      include: { place: true, reservations: true },
+      include: {
+        place: true,
+        reservations: { orderBy: { startAt: 'asc' } },
+      },
     });
     if (!space) {
       throw new NotFoundException({
@@ -155,7 +164,7 @@ export class SpacesService {
       data: updateSpaceDto,
       include: {
         place: true,
-        reservations: true,
+        reservations: { orderBy: { startAt: 'asc' } },
       },
     });
   }
