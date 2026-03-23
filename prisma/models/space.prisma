@@ -3,7 +3,7 @@ model Space {
   placeId      String
   place        Place    @relation(fields: [placeId], references: [id])
   name         String   @db.VarChar(100)
-  reference    String?  @db.VarChar(500)
+  reference    String?  @db.VarChar(25)
   capacity     Int
   description  String?  @db.VarChar(500)
   reservations Reservation[]

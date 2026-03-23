@@ -145,11 +145,17 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/places/{{place_id}}/spaces",
+              "raw": "{{base_url}}/places/{{place_id}}/spaces?page=1&pageSize=10&sortBy=name&sortOrder=asc",
               "host": ["{{base_url}}"],
-              "path": ["places", "{{place_id}}", "spaces"]
+              "path": ["places", "{{place_id}}", "spaces"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" },
+                { "key": "sortBy", "value": "name" },
+                { "key": "sortOrder", "value": "asc" }
+              ]
             },
-            "description": "Get all spaces belonging to a place. Returns { place, spaces } - place at top level; spaces array has no placeId/place; reservations have no spaceId/placeId. 404 if place not found."
+            "description": "Paginated list of spaces belonging to a place. Returns { place, items, meta } - place includes totalSpaces; items have no placeId/place; reservations have no spaceId/placeId. Optional: page, pageSize (max 100), sortBy (name|capacity), sortOrder (asc|desc). 404 if place not found."
           }
         },
         {
