@@ -71,6 +71,65 @@ export class PlacesController {
     return this.placesService.findAll();
   }
 
+  @Get(':placeId/spaces')
+  @ApiOperation({ summary: 'Get all spaces for a place' })
+  @ApiParam({ name: 'placeId', description: 'Place ID (CUID)' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of spaces belonging to the place',
+    schema: {
+      allOf: [{ $ref: '#/components/schemas/SuccessResponse' }],
+      example: {
+        success: true,
+        statusCode: 200,
+        message: 'Spaces retrieved successfully',
+        data: {
+          place: {
+            id: 'clxxxxxxxxxxxxxxxxxxxxxxxxx',
+            name: 'Demo Office',
+            latitude: 40.4168,
+            longitude: -3.7038,
+            timezone: 'Europe/Madrid',
+            createdAt: '2026-03-21T22:00:00.000Z',
+            updatedAt: '2026-03-21T22:00:00.000Z',
+          },
+          spaces: [
+            {
+              id: 'clxxxxxxxxxxxxxxxxxxxxxxxxx',
+              name: 'Meeting Room A',
+              reference: 'MRA-01',
+              capacity: 6,
+              description: 'Main meeting room',
+              createdAt: '2026-03-21T22:00:00.000Z',
+              updatedAt: '2026-03-21T22:00:00.000Z',
+              reservations: [
+                {
+                  id: 'clxxxxxxxxxxxxxxxxxxxxxxxxx',
+                  clientEmail: 'client@example.com',
+                  startAt: '2026-03-28T09:00:00.000Z',
+                  endAt: '2026-03-28T11:00:00.000Z',
+                  createdAt: '2026-03-21T22:00:00.000Z',
+                  updatedAt: '2026-03-21T22:00:00.000Z',
+                },
+              ],
+            },
+          ],
+        },
+        timestamp: '2026-03-21T22:00:00.000Z',
+        path: '/places/clxxxxxxxxxxxxxxxxxxxxxxxxx/spaces',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Place not found',
+    schema: { $ref: '#/components/schemas/ErrorResponse' },
+  })
+  @SuccessMessage('Spaces retrieved successfully')
+  findSpacesByPlaceId(@Param('placeId') placeId: string) {
+    return this.placesService.findSpacesByPlaceId(placeId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a place by ID' })
   @ApiParam({ name: 'id', description: 'Place ID' })

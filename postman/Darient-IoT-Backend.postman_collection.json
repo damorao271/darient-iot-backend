@@ -134,6 +134,25 @@
           }
         },
         {
+          "name": "Get Spaces by Place ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/places/{{place_id}}/spaces",
+              "host": ["{{base_url}}"],
+              "path": ["places", "{{place_id}}", "spaces"]
+            },
+            "description": "Get all spaces belonging to a place. Returns { place, spaces } - place at top level; spaces array has no placeId/place; reservations have no spaceId/placeId. 404 if place not found."
+          }
+        },
+        {
           "name": "Update Place",
           "request": {
             "method": "PATCH",
