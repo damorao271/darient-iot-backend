@@ -23,7 +23,7 @@ describe('PlacesService', () => {
     name: 'Office',
     latitude: 40.4168,
     longitude: -3.7038,
-    spaces: [],
+    _count: { spaces: 0 },
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -70,16 +70,20 @@ describe('PlacesService', () => {
           latitude: createPlaceDto.latitude,
           longitude: createPlaceDto.longitude,
         },
-        include: { spaces: true },
+        include: { _count: { select: { spaces: true } } },
       });
-      expect(result).toEqual(mockPlace);
+      expect(result).toMatchObject({
+        id: mockPlace.id,
+        name: mockPlace.name,
+        spaceCount: 0,
+      });
     });
 
-    it('should return place with spaces array', async () => {
+    it('should return place with spaceCount', async () => {
       const result = await service.create(createPlaceDto);
 
-      expect(result).toHaveProperty('spaces');
-      expect(result.spaces).toEqual([]);
+      expect(result).toHaveProperty('spaceCount');
+      expect(result.spaceCount).toBe(0);
     });
 
     it('should throw ConflictException when place name already exists', async () => {

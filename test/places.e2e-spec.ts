@@ -51,8 +51,8 @@ describe('PlacesController (e2e)', () => {
           expect(res.body.data.name).toBe(validPlace.name);
           expect(res.body.data.latitude).toBe(validPlace.latitude);
           expect(res.body.data.longitude).toBe(validPlace.longitude);
-          expect(res.body.data).toHaveProperty('spaces');
-          expect(res.body.data.spaces).toEqual([]);
+          expect(res.body.data).toHaveProperty('spaceCount');
+          expect(res.body.data.spaceCount).toBe(0);
           expect(res.body.data).toHaveProperty('createdAt');
           expect(res.body.data).toHaveProperty('updatedAt');
           expect(res.body).toHaveProperty('timestamp');

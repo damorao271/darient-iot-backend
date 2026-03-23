@@ -9,6 +9,27 @@ import type { CreateSpaceDto } from './dto/create-space.dto';
 import type { SpacesQuery } from './dto/spaces-query.dto';
 import type { UpdateSpaceDto } from './dto/update-space.dto';
 
+const MAX_UPCOMING_RESERVATIONS = 3;
+
+function getSpaceInclude(now: Date = new Date()) {
+  return {
+    place: true,
+    _count: { select: { reservations: true } },
+    reservations: {
+      where: { startAt: { gt: now } },
+      orderBy: { startAt: 'asc' as const },
+      take: MAX_UPCOMING_RESERVATIONS,
+    },
+  };
+}
+
+function serializeSpace<
+  T extends { _count: { reservations: number }; reservations: unknown[] },
+>(space: T): Omit<T, '_count'> & { reservationCount: number } {
+  const { _count, ...rest } = space;
+  return { ...rest, reservationCount: _count.reservations };
+}
+
 @Injectable()
 export class SpacesService {
   constructor(private readonly prisma: PrismaService) {}
@@ -37,13 +58,11 @@ export class SpacesService {
       });
     }
 
-    return this.prisma.space.create({
+    const created = await this.prisma.space.create({
       data: createSpaceDto as Prisma.SpaceUncheckedCreateInput,
-      include: {
-        place: true,
-        reservations: { orderBy: { startAt: 'asc' } },
-      },
+      include: getSpaceInclude(),
     });
+    return serializeSpace(created);
   }
 
   async findAll(query?: SpacesQuery) {
@@ -71,22 +90,19 @@ export class SpacesService {
     const orderBy =
       sortBy === 'name' ? { name: sortOrder } : { capacity: sortOrder };
 
-    const [items, total] = await Promise.all([
+    const [rawItems, total] = await Promise.all([
       this.prisma.space.findMany({
         where,
         skip,
         take: pageSize,
         orderBy,
-        include: {
-          place: true,
-          reservations: { orderBy: { startAt: 'asc' } },
-        },
+        include: getSpaceInclude(),
       }),
       this.prisma.space.count({ where }),
     ]);
 
     return {
-      items,
+      items: rawItems.map(serializeSpace),
       meta: {
         page,
         pageSize,
@@ -105,10 +121,7 @@ export class SpacesService {
   async findOne(id: string) {
     const space = await this.prisma.space.findUnique({
       where: { id },
-      include: {
-        place: true,
-        reservations: { orderBy: { startAt: 'asc' } },
-      },
+      include: getSpaceInclude(),
     });
     if (!space) {
       throw new NotFoundException({
@@ -116,7 +129,7 @@ export class SpacesService {
         errorCode: 'ERR_SPACE_NOT_FOUND',
       });
     }
-    return space;
+    return serializeSpace(space);
   }
 
   async update(id: string, updateSpaceDto: UpdateSpaceDto) {
@@ -159,14 +172,12 @@ export class SpacesService {
       }
     }
 
-    return this.prisma.space.update({
+    const updated = await this.prisma.space.update({
       where: { id },
       data: updateSpaceDto,
-      include: {
-        place: true,
-        reservations: { orderBy: { startAt: 'asc' } },
-      },
+      include: getSpaceInclude(),
     });
+    return serializeSpace(updated);
   }
 
   async remove(id: string) {
