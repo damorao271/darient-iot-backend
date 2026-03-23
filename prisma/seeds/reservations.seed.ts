@@ -12,6 +12,7 @@ type ReservationDef = {
 };
 
 const RESERVATIONS: ReservationDef[] = [
+  // Original set (future)
   { placeName: 'Demo Office', spaceName: 'Meeting Room A', clientEmail: 'alice@example.com', daysAhead: 1, startTime: '09:00', endTime: '10:30' },
   { placeName: 'Demo Office', spaceName: 'Meeting Room A', clientEmail: 'bob@example.com', daysAhead: 1, startTime: '11:00', endTime: '12:00' },
   { placeName: 'Demo Office', spaceName: 'Meeting Room B', clientEmail: 'alice@example.com', daysAhead: 1, startTime: '14:00', endTime: '15:00' },
@@ -22,6 +23,47 @@ const RESERVATIONS: ReservationDef[] = [
   { placeName: 'Central Station Office', spaceName: 'Meeting Room 1', clientEmail: 'frank@example.com', daysAhead: 4, startTime: '10:00', endTime: '11:00' },
   { placeName: 'Chamartín Branch', spaceName: 'Meeting Room A', clientEmail: 'grace@example.com', daysAhead: 5, startTime: '15:00', endTime: '16:30' },
   { placeName: 'Plaza del Sol Office', spaceName: 'Main Conference', clientEmail: 'helen@example.com', daysAhead: 6, startTime: '09:00', endTime: '10:00' },
+  { placeName: 'Las Mercedes Branch', spaceName: 'Meeting Room A', clientEmail: 'ivan@example.com', daysAhead: 1, startTime: '10:00', endTime: '11:30' },
+  { placeName: 'Las Mercedes Branch', spaceName: 'Work Area', clientEmail: 'maria@example.com', daysAhead: 2, startTime: '14:00', endTime: '17:00' },
+  { placeName: 'Altamira Office', spaceName: 'Main Conference', clientEmail: 'carlos@example.com', daysAhead: 3, startTime: '09:00', endTime: '11:00' },
+  { placeName: 'Altamira Office', spaceName: 'Hot Desk Zone', clientEmail: 'ana@example.com', daysAhead: 4, startTime: '13:00', endTime: '15:00' },
+  // Second set (future, different days/times)
+  { placeName: 'Demo Office', spaceName: 'Meeting Room A', clientEmail: 'paul@example.com', daysAhead: 7, startTime: '09:00', endTime: '10:30' },
+  { placeName: 'Demo Office', spaceName: 'Meeting Room B', clientEmail: 'lisa@example.com', daysAhead: 7, startTime: '11:00', endTime: '12:00' },
+  { placeName: 'Main Warehouse', spaceName: 'Loading Bay', clientEmail: 'peter@example.com', daysAhead: 8, startTime: '08:00', endTime: '09:00' },
+  { placeName: 'North Campus', spaceName: 'Conference Room', clientEmail: 'sarah@example.com', daysAhead: 8, startTime: '14:00', endTime: '16:00' },
+  { placeName: 'Tech Hub', spaceName: 'Lab 1', clientEmail: 'mike@example.com', daysAhead: 9, startTime: '10:00', endTime: '12:00' },
+  { placeName: 'Demo Office', spaceName: 'Open Area', clientEmail: 'julia@example.com', daysAhead: 9, startTime: '08:00', endTime: '12:00' },
+  { placeName: 'Central Station Office', spaceName: 'Meeting Room 1', clientEmail: 'tom@example.com', daysAhead: 10, startTime: '14:00', endTime: '15:00' },
+  { placeName: 'Chamartín Branch', spaceName: 'Meeting Room A', clientEmail: 'emma@example.com', daysAhead: 10, startTime: '10:00', endTime: '11:30' },
+  { placeName: 'Plaza del Sol Office', spaceName: 'Main Conference', clientEmail: 'james@example.com', daysAhead: 11, startTime: '11:00', endTime: '12:00' },
+  { placeName: 'Las Mercedes Branch', spaceName: 'Meeting Room A', clientEmail: 'sofia@example.com', daysAhead: 8, startTime: '15:00', endTime: '16:30' },
+  { placeName: 'Las Mercedes Branch', spaceName: 'Work Area', clientEmail: 'david@example.com', daysAhead: 9, startTime: '09:00', endTime: '12:00' },
+  { placeName: 'Altamira Office', spaceName: 'Main Conference', clientEmail: 'laura@example.com', daysAhead: 10, startTime: '14:00', endTime: '16:00' },
+  { placeName: 'Altamira Office', spaceName: 'Hot Desk Zone', clientEmail: 'roberto@example.com', daysAhead: 11, startTime: '09:00', endTime: '11:00' },
+  // Third set (future, more days ahead)
+  { placeName: 'Demo Office', spaceName: 'Meeting Room A', clientEmail: 'natalie@example.com', daysAhead: 12, startTime: '10:00', endTime: '11:00' },
+  { placeName: 'Main Warehouse', spaceName: 'Office Section', clientEmail: 'kevin@example.com', daysAhead: 13, startTime: '09:00', endTime: '10:30' },
+  { placeName: 'North Campus', spaceName: 'Flex Space', clientEmail: 'olivia@example.com', daysAhead: 14, startTime: '10:00', endTime: '12:00' },
+  { placeName: 'Tech Hub', spaceName: 'Lab 2', clientEmail: 'andrea@example.com', daysAhead: 12, startTime: '13:00', endTime: '15:00' },
+  { placeName: 'Central Station Office', spaceName: 'Meeting Room 2', clientEmail: 'daniel@example.com', daysAhead: 13, startTime: '11:00', endTime: '12:00' },
+  { placeName: 'Chamartín Branch', spaceName: 'Meeting Room B', clientEmail: 'lucia@example.com', daysAhead: 14, startTime: '09:00', endTime: '10:00' },
+  { placeName: 'Plaza del Sol Office', spaceName: 'Hot Desk Zone', clientEmail: 'ricardo@example.com', daysAhead: 12, startTime: '15:00', endTime: '17:00' },
+  { placeName: 'Las Mercedes Branch', spaceName: 'Meeting Room B', clientEmail: 'patricia@example.com', daysAhead: 13, startTime: '11:00', endTime: '12:30' },
+  { placeName: 'Altamira Office', spaceName: 'Main Conference', clientEmail: 'fernando@example.com', daysAhead: 14, startTime: '08:00', endTime: '10:00' },
+  // Past reservations
+  { placeName: 'Demo Office', spaceName: 'Meeting Room A', clientEmail: 'past-alice@example.com', daysAhead: -1, startTime: '09:00', endTime: '10:30' },
+  { placeName: 'Demo Office', spaceName: 'Meeting Room B', clientEmail: 'past-bob@example.com', daysAhead: -1, startTime: '14:00', endTime: '15:00' },
+  { placeName: 'Main Warehouse', spaceName: 'Loading Bay', clientEmail: 'past-carol@example.com', daysAhead: -2, startTime: '08:00', endTime: '09:00' },
+  { placeName: 'North Campus', spaceName: 'Conference Room', clientEmail: 'past-dave@example.com', daysAhead: -2, startTime: '10:00', endTime: '12:00' },
+  { placeName: 'Tech Hub', spaceName: 'Lab 1', clientEmail: 'past-eve@example.com', daysAhead: -3, startTime: '09:00', endTime: '11:00' },
+  { placeName: 'Central Station Office', spaceName: 'Meeting Room 1', clientEmail: 'past-frank@example.com', daysAhead: -3, startTime: '14:00', endTime: '15:00' },
+  { placeName: 'Chamartín Branch', spaceName: 'Meeting Room A', clientEmail: 'past-grace@example.com', daysAhead: -4, startTime: '10:00', endTime: '11:30' },
+  { placeName: 'Plaza del Sol Office', spaceName: 'Main Conference', clientEmail: 'past-helen@example.com', daysAhead: -4, startTime: '09:00', endTime: '10:00' },
+  { placeName: 'Las Mercedes Branch', spaceName: 'Meeting Room A', clientEmail: 'past-ivan@example.com', daysAhead: -5, startTime: '11:00', endTime: '12:30' },
+  { placeName: 'Las Mercedes Branch', spaceName: 'Work Area', clientEmail: 'past-maria@example.com', daysAhead: -5, startTime: '14:00', endTime: '17:00' },
+  { placeName: 'Altamira Office', spaceName: 'Main Conference', clientEmail: 'past-carlos@example.com', daysAhead: -6, startTime: '09:00', endTime: '11:00' },
+  { placeName: 'Altamira Office', spaceName: 'Hot Desk Zone', clientEmail: 'past-ana@example.com', daysAhead: -6, startTime: '13:00', endTime: '15:00' },
 ];
 
 export async function seedReservations(prisma: PrismaClient): Promise<void> {
