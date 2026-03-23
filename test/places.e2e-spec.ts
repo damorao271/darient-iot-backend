@@ -112,4 +112,108 @@ describe('PlacesController (e2e)', () => {
         });
     });
   });
+
+  describe('GET /places/:placeId/spaces', () => {
+    it('should return 200 with spaces belonging to the place', async () => {
+      const createRes = await request(app.getHttpServer())
+        .post('/places')
+        .set('x-api-key', apiKey)
+        .send({
+          name: `E2E Spaces By Place ${Date.now()}`,
+          latitude: 40.4168,
+          longitude: -3.7038,
+        })
+        .expect(201);
+
+      const placeId = createRes.body.data.id;
+
+      await request(app.getHttpServer())
+        .post('/spaces')
+        .set('x-api-key', apiKey)
+        .send({
+          placeId,
+          name: 'Room A',
+          capacity: 4,
+        })
+        .expect(201);
+
+      await request(app.getHttpServer())
+        .post('/spaces')
+        .set('x-api-key', apiKey)
+        .send({
+          placeId,
+          name: 'Room B',
+          capacity: 6,
+        })
+        .expect(201);
+
+      const res = await request(app.getHttpServer())
+        .get(`/places/${placeId}/spaces`)
+        .set('x-api-key', apiKey)
+        .expect(200);
+
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Spaces retrieved successfully');
+      expect(res.body.data).toHaveProperty('place');
+      expect(res.body.data).toHaveProperty('spaces');
+      expect(res.body.data.place.id).toBe(placeId);
+      expect(Array.isArray(res.body.data.spaces)).toBe(true);
+      expect(res.body.data.spaces.length).toBe(2);
+      expect(
+        res.body.data.spaces.map((s: { name: string }) => s.name).sort(),
+      ).toEqual(['Room A', 'Room B']);
+      res.body.data.spaces.forEach(
+        (space: { placeId?: string; place?: unknown; reservations?: Array<Record<string, unknown>> }) => {
+          expect(space).not.toHaveProperty('placeId');
+          expect(space).not.toHaveProperty('place');
+          expect(space).toHaveProperty('reservations');
+          space.reservations?.forEach((r: Record<string, unknown>) => {
+            expect(r).not.toHaveProperty('spaceId');
+            expect(r).not.toHaveProperty('placeId');
+          });
+        },
+      );
+
+      await prisma.space.deleteMany({ where: { placeId } });
+      await prisma.place.delete({ where: { id: placeId } });
+    });
+
+    it('should return 200 with empty array when place has no spaces', async () => {
+      const createRes = await request(app.getHttpServer())
+        .post('/places')
+        .set('x-api-key', apiKey)
+        .send({
+          name: `E2E Place No Spaces ${Date.now()}`,
+          latitude: 40.4168,
+          longitude: -3.7038,
+        })
+        .expect(201);
+
+      const placeId = createRes.body.data.id;
+
+      const res = await request(app.getHttpServer())
+        .get(`/places/${placeId}/spaces`)
+        .set('x-api-key', apiKey)
+        .expect(200);
+
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.place.id).toBe(placeId);
+      expect(res.body.data.spaces).toEqual([]);
+
+      await prisma.place.delete({ where: { id: placeId } });
+    });
+
+    it('should return 404 when place does not exist', async () => {
+      const fakeId = 'clxxxxxxxxxxxxxxxxxxxxxxxxxx';
+
+      return request(app.getHttpServer())
+        .get(`/places/${fakeId}/spaces`)
+        .set('x-api-key', apiKey)
+        .expect(404)
+        .expect((res) => {
+          expect(res.body.success).toBe(false);
+          expect(res.body.statusCode).toBe(404);
+        });
+    });
+  });
 });
