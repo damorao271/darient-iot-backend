@@ -39,13 +39,34 @@ export class PlacesController {
         name: { type: 'string', minLength: 1, maxLength: 100 },
         latitude: { type: 'number', minimum: -90, maximum: 90 },
         longitude: { type: 'number', minimum: -180, maximum: 180 },
+        timezone: { type: 'string', maxLength: 50, example: 'Europe/Madrid', description: 'IANA timezone (default: UTC)' },
       },
     },
   })
   @ApiResponse({
     status: 201,
     description: 'Place successfully created',
-    schema: { $ref: '#/components/schemas/SuccessResponse' },
+    schema: {
+      allOf: [{ $ref: '#/components/schemas/SuccessResponse' }],
+      example: {
+        success: true,
+        statusCode: 201,
+        message: 'Place created successfully',
+        data: {
+          id: 'clxxxxxxxxxxxxxxxxxxxxxxxxx',
+          name: 'Main Office',
+          latitude: 40.4168,
+          longitude: -3.7038,
+          timezone: 'Europe/Madrid',
+          createdAt: '2026-03-21T22:00:00.000Z',
+          updatedAt: '2026-03-21T22:00:00.000Z',
+          spaceCount: 0,
+          totalCapacity: 0,
+        },
+        timestamp: '2026-03-21T22:00:00.000Z',
+        path: '/places',
+      },
+    },
   })
   @ApiResponse({
     status: 400,
@@ -66,8 +87,30 @@ export class PlacesController {
   @ApiOperation({ summary: 'Get all places' })
   @ApiResponse({
     status: 200,
-    description: 'List of all places',
-    schema: { $ref: '#/components/schemas/SuccessResponse' },
+    description: 'List of all places with spaceCount and totalCapacity',
+    schema: {
+      allOf: [{ $ref: '#/components/schemas/SuccessResponse' }],
+      example: {
+        success: true,
+        statusCode: 200,
+        message: 'Places retrieved successfully',
+        data: [
+          {
+            id: 'clxxxxxxxxxxxxxxxxxxxxxxxxx',
+            name: 'Demo Office',
+            latitude: 40.4168,
+            longitude: -3.7038,
+            timezone: 'Europe/Madrid',
+            createdAt: '2026-03-21T22:00:00.000Z',
+            updatedAt: '2026-03-21T22:00:00.000Z',
+            spaceCount: 3,
+            totalCapacity: 30,
+          },
+        ],
+        timestamp: '2026-03-21T22:00:00.000Z',
+        path: '/places',
+      },
+    },
   })
   @SuccessMessage('Places retrieved successfully')
   findAll() {
@@ -176,8 +219,28 @@ export class PlacesController {
   @ApiParam({ name: 'id', description: 'Place ID' })
   @ApiResponse({
     status: 200,
-    description: 'Place found',
-    schema: { $ref: '#/components/schemas/SuccessResponse' },
+    description: 'Place found with spaceCount and totalCapacity',
+    schema: {
+      allOf: [{ $ref: '#/components/schemas/SuccessResponse' }],
+      example: {
+        success: true,
+        statusCode: 200,
+        message: 'Place retrieved successfully',
+        data: {
+          id: 'clxxxxxxxxxxxxxxxxxxxxxxxxx',
+          name: 'Demo Office',
+          latitude: 40.4168,
+          longitude: -3.7038,
+          timezone: 'Europe/Madrid',
+          createdAt: '2026-03-21T22:00:00.000Z',
+          updatedAt: '2026-03-21T22:00:00.000Z',
+          spaceCount: 3,
+          totalCapacity: 30,
+        },
+        timestamp: '2026-03-21T22:00:00.000Z',
+        path: '/places/clxxxxxxxxxxxxxxxxxxxxxxxxx',
+      },
+    },
   })
   @ApiResponse({
     status: 404,
@@ -199,6 +262,7 @@ export class PlacesController {
         name: { type: 'string', minLength: 1, maxLength: 100 },
         latitude: { type: 'number', minimum: -90, maximum: 90 },
         longitude: { type: 'number', minimum: -180, maximum: 180 },
+        timezone: { type: 'string', maxLength: 50, example: 'Europe/Madrid' },
       },
     },
   })

@@ -18,11 +18,14 @@ function omitKeys<T extends object, K extends keyof T>(
   return result as Omit<T, K>;
 }
 
-function serializePlace<T extends { _count: { spaces: number } }>(
+function serializePlace<
+  T extends { _count: { spaces: number }; spaces?: { capacity: number }[] },
+>(
   place: T,
-): Omit<T, '_count'> & { spaceCount: number } {
-  const { _count, ...rest } = place;
-  return { ...rest, spaceCount: _count.spaces };
+): Omit<T, '_count' | 'spaces'> & { spaceCount: number; totalCapacity: number } {
+  const { _count, spaces = [], ...rest } = place;
+  const totalCapacity = spaces.reduce((sum, s) => sum + s.capacity, 0);
+  return { ...rest, spaceCount: _count.spaces, totalCapacity };
 }
 
 @Injectable()
@@ -54,7 +57,10 @@ export class PlacesService {
 
   async findAll() {
     const places = await this.prisma.place.findMany({
-      include: { _count: { select: { spaces: true } } },
+      include: {
+        _count: { select: { spaces: true } },
+        spaces: { select: { capacity: true } },
+      },
     });
     return places.map(serializePlace);
   }
@@ -62,7 +68,10 @@ export class PlacesService {
   async findOne(id: string) {
     const place = await this.prisma.place.findUniqueOrThrow({
       where: { id },
-      include: { _count: { select: { spaces: true } } },
+      include: {
+        _count: { select: { spaces: true } },
+        spaces: { select: { capacity: true } },
+      },
     });
     return serializePlace(place);
   }
@@ -105,7 +114,11 @@ export class PlacesService {
         take: pageSize,
         orderBy,
         include: {
-          _count: { select: { reservations: true } },
+          _count: {
+            select: {
+              reservations: { where: { startAt: { gt: now } } },
+            },
+          },
           reservations: {
             where: { startAt: { gt: now } },
             orderBy: { startAt: 'asc' as const },
