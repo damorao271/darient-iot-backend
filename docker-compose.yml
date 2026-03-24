@@ -15,9 +15,12 @@ services:
         required: false
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-darient}:${POSTGRES_PASSWORD:-darient}@db:5432/${POSTGRES_DB:-darient}
+      MQTT_BROKER_URL: mqtt://mqtt:1883
     depends_on:
       db:
         condition: service_healthy
+      mqtt:
+        condition: service_started
     command: sh -c "npm install && npm run db:migrate && npm run db:seed && npm run start:dev"
     restart: unless-stopped
 
@@ -38,6 +41,17 @@ services:
       timeout: 5s
       retries: 5
 
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: darient-iot-backend-mqtt
+    ports:
+      - "${MQTT_PORT:-1883}:1883"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mqtt_data:/mosquitto/data
+    restart: unless-stopped
+
 volumes:
   backend_node_modules:
   backend_db_data:
+  mqtt_data:
