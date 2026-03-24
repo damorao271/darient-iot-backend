@@ -1,0 +1,15 @@
+model TelemetryAggregation {
+  id          String   @id @default(cuid())
+  spaceId     String
+  space       Space    @relation(fields: [spaceId], references: [id])
+  ts          DateTime
+  tempC       Float
+  humidityPct Float
+  co2Ppm      Int
+  occupancy   Int
+  powerW      Int
+
+  createdAt DateTime @default(now())
+
+  @@index([spaceId, ts(sort: Desc)])
+}

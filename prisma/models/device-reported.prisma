@@ -1,0 +1,12 @@
+model DeviceReported {
+  id                  String    @id @default(cuid())
+  spaceId             String    @unique
+  space               Space     @relation(fields: [spaceId], references: [id])
+  co2AlertThreshold   Int?
+  samplingIntervalSec Int?
+  firmwareVersion     String?
+  ts                  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
