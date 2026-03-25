@@ -2,6 +2,7 @@
   "moduleFileExtensions": ["js", "json", "ts"],
   "setupFiles": ["<rootDir>/setup-e2e.ts"],
   "moduleNameMapper": {
+    "^mqtt$": "<rootDir>/__mocks__/mqtt.ts",
     "^(.*)generated/prisma/client\\.js$": "<rootDir>/../generated/prisma/client.ts",
     "^\\./enums\\.js$": "<rootDir>/../generated/prisma/enums.ts",
     "^\\./internal/class\\.js$": "<rootDir>/../generated/prisma/internal/class.ts",

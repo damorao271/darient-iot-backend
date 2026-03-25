@@ -13,13 +13,14 @@ import { PlacesModule } from './places/places.module';
 import { SpacesModule } from './spaces/spaces.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { IotModule } from './iot/iot.module';
+import { AuthModule } from './auth/auth.module';
 
 const ZodValidationPipeClass = createZodValidationPipe({
   createValidationException: createZodValidationException,
 });
 
 @Module({
-  imports: [PrismaModule, PlacesModule, SpacesModule, ReservationsModule, IotModule],
+  imports: [PrismaModule, PlacesModule, SpacesModule, ReservationsModule, IotModule, AuthModule],
   controllers: [AppController],
   providers: [
     AppService,

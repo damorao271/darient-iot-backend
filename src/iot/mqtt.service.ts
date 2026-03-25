@@ -48,7 +48,11 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
   }
 
   onModuleDestroy() {
-    this.client?.end();
+    if (this.client) {
+      this.client.removeAllListeners();
+      this.client.end(true);
+      this.client = null;
+    }
   }
 
   setTelemetryHandler(handler: TelemetryHandler) {
