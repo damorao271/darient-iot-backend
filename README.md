@@ -1,3 +1,5 @@
+# Daniel Morao Nishimura - Technical Assessment
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
@@ -34,9 +36,9 @@ cd ..   # go to Darient/
 ./run.sh --profile dev up
 ```
 
-| Service | URL |
-|---------|-----|
-| Backend (hot reload) | http://localhost:3000 |
+| Service               | URL                   |
+| --------------------- | --------------------- |
+| Backend (hot reload)  | http://localhost:3000 |
 | Frontend (hot reload) | http://localhost:5173 |
 
 Code changes in `src/` are reflected immediately.
