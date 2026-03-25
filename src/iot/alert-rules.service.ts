@@ -8,14 +8,14 @@ import { IotGateway } from './iot.gateway';
 import type { TelemetryPayload } from './iot.types';
 
 // ─── Time window constants (all in milliseconds) ─────────────────────────────
-const CO2_OPEN_AFTER_MS = 5 * 60 * 1000;
-const CO2_CLOSE_AFTER_MS = 2 * 60 * 1000;
+const CO2_OPEN_AFTER_MS = 0.3 * 60 * 1000;
+const CO2_CLOSE_AFTER_MS = 0.3 * 60 * 1000;
 
-const OCC_MAX_OPEN_AFTER_MS = 2 * 60 * 1000;
-const OCC_MAX_CLOSE_AFTER_MS = 1 * 60 * 1000;
+const OCC_MAX_OPEN_AFTER_MS = 0.3 * 60 * 1000;
+const OCC_MAX_CLOSE_AFTER_MS = 0.3 * 60 * 1000;
 
-const OCC_UNEXP_OPEN_AFTER_MS = 10 * 60 * 1000;
-const OCC_UNEXP_CLOSE_AFTER_MS = 5 * 60 * 1000;
+const OCC_UNEXP_OPEN_AFTER_MS = 0.3 * 60 * 1000;
+const OCC_UNEXP_CLOSE_AFTER_MS = 0.3 * 60 * 1000;
 
 interface AlertWindow {
   conditionTrueFrom: Date | null;
@@ -136,7 +136,12 @@ export class AlertRulesService {
 
       const elapsed = now.getTime() - window.conditionTrueFrom.getTime();
       if (!window.openAlertId && elapsed >= openAfterMs) {
-        const alert = await this.openAlert(space.id, kind, window.conditionTrueFrom, meta);
+        const alert = await this.openAlert(
+          space.id,
+          kind,
+          window.conditionTrueFrom,
+          meta,
+        );
         window.openAlertId = alert.id;
         this.gateway.emitAlertOpened(space.id, alert);
         this.logger.warn(`Alert opened: ${kind} for space ${space.id}`);
@@ -170,11 +175,19 @@ export class AlertRulesService {
     meta: Record<string, unknown>,
   ): Promise<Alert> {
     return this.prisma.alert.create({
-      data: { spaceId, kind, startedAt, metaJson: meta as Prisma.InputJsonValue },
+      data: {
+        spaceId,
+        kind,
+        startedAt,
+        metaJson: meta as Prisma.InputJsonValue,
+      },
     });
   }
 
-  private async resolveAlert(alertId: string, resolvedAt: Date): Promise<Alert> {
+  private async resolveAlert(
+    alertId: string,
+    resolvedAt: Date,
+  ): Promise<Alert> {
     return this.prisma.alert.update({
       where: { id: alertId },
       data: { resolvedAt },
