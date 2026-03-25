@@ -67,6 +67,18 @@ Used for critical timezone handling, and architecture.
 | Phase 4: Critical Logic | Opus (timezone, intervals, migrations)              |
 | Phase 5: Testing & QA   | Sonnet + Fast (E2E flows, edge cases)               |
 
+### Cursor modes (Agent, Plan, Ask)
+
+The workflow switched between **Agent**, **Plan**, and **Ask** depending on what each task needed:
+
+| Mode      | When it was used                                                                                                                     |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Agent** | Implementing features, applying multi-file edits, running terminal commands, and iterating on code with tool use.                    |
+| **Plan**  | Breaking down larger changes (architecture, migrations, cross-module refactors) before execution, to align steps with requirements.  |
+| **Ask**   | Read-only exploration: explaining existing code, comparing options, or quick documentation-style answers without modifying the repo. |
+
+This mix kept implementation efficient while reserving planning for higher-risk or broader changes and Ask for understanding without side effects.
+
 ## 1. Executive Summary
 
 This project implements the Darient Technical Assessment requirements: a Node.js backend for a coworking reservation system. AI was used as a productivity aid for drafting, documentation, and implementation speed, never for core design or critical decisions.
@@ -83,24 +95,24 @@ Evidence of human-led design and execution is apparent across:
 
 The project meets the stated requirements:
 
-| Requirement                        | Implementation                                                         |
-| ---------------------------------- | ---------------------------------------------------------------------- |
-| Models (Place, Space, Reservation) | Prisma models with Place.timezone (extra requirement)                  |
-| Business Rules                     | Conflict detection, max 3 reservations/week per client                 |
-| CRUD Endpoints                     | Places, Spaces, Reservations with full CRUD                            |
-| Pagination                         | page, pageSize, sortBy, sortOrder in Reservations list                 |
-| Documentation                      | README, Swagger                                                        |
-| Docker                             | docker-compose.yml with PostgreSQL, Mosquitto and health checks        |
-| Database + ORM                     | PostgreSQL + Prisma                                                    |
-| Architecture                       | NestJS modular structure                                               |
-| Authentication                     | API key in headers (x-api-key), ApiKeyGuard                            |
-| Tests                              | Unit tests (e.g. interval.utils, week.utils, time.utils) and E2E tests |
-| **IoT Bonus – MQTT subscriber**    | `IotModule` subscribes to `sites/+/offices/+/telemetry` and `reported` |
+| Requirement                        | Implementation                                                                       |
+| ---------------------------------- | ------------------------------------------------------------------------------------ |
+| Models (Place, Space, Reservation) | Prisma models with Place.timezone (extra requirement)                                |
+| Business Rules                     | Conflict detection, max 3 reservations/week per client                               |
+| CRUD Endpoints                     | Places, Spaces, Reservations with full CRUD                                          |
+| Pagination                         | page, pageSize, sortBy, sortOrder in Reservations list                               |
+| Documentation                      | README, Swagger                                                                      |
+| Docker                             | docker-compose.yml with PostgreSQL, Mosquitto and health checks                      |
+| Database + ORM                     | PostgreSQL + Prisma                                                                  |
+| Architecture                       | NestJS modular structure                                                             |
+| Authentication                     | API key in headers (x-api-key), ApiKeyGuard                                          |
+| Tests                              | Unit tests (e.g. interval.utils, week.utils, time.utils) and E2E tests               |
+| **IoT Bonus – MQTT subscriber**    | `IotModule` subscribes to `sites/+/offices/+/telemetry` and `reported`               |
 | **IoT Bonus – Digital Twin**       | `DeviceDesired` / `DeviceReported` tables; PATCH publishes retained MQTT desired msg |
-| **IoT Bonus – Telemetry store**    | `TelemetryAggregation` persists every reading; last-hour stats endpoint |
-| **IoT Bonus – Alert rules**        | In-memory window engine for CO2, OCCUPANCY_MAX, OCCUPANCY_UNEXPECTED   |
-| **IoT Bonus – WebSocket**          | Socket.io gateway emits `telemetry`, `alert:opened`, `alert:resolved`, `reported` |
-| **IoT Bonus – Admin REST**         | `GET/PATCH /spaces/:id/telemetry`, `/alerts`, `/device`, `/device/desired` |
+| **IoT Bonus – Telemetry store**    | `TelemetryAggregation` persists every reading; last-hour stats endpoint              |
+| **IoT Bonus – Alert rules**        | In-memory window engine for CO2, OCCUPANCY_MAX, OCCUPANCY_UNEXPECTED                 |
+| **IoT Bonus – WebSocket**          | Socket.io gateway emits `telemetry`, `alert:opened`, `alert:resolved`, `reported`    |
+| **IoT Bonus – Admin REST**         | `GET/PATCH /spaces/:id/telemetry`, `/alerts`, `/device`, `/device/desired`           |
 
 ## 3. How AI Was Used (Productivity Role)
 
