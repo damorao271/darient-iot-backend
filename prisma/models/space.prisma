@@ -1,12 +1,21 @@
 model Space {
-  id           String   @id @default(cuid())
-  placeId      String
-  place        Place    @relation(fields: [placeId], references: [id])
-  name         String   @db.VarChar(100)
-  reference    String?  @db.VarChar(500)
-  capacity     Int
-  description  String?  @db.VarChar(500)
-  reservations Reservation[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String  @id @default(cuid())
+  placeId     String
+  place       Place   @relation(fields: [placeId], references: [id])
+  name        String  @db.VarChar(100)
+  reference   String? @db.VarChar(25)
+  capacity    Int
+  description String? @db.VarChar(500)
+  // Optional office hours in HH:mm format (uses Place.timezone)
+  openTime  String? @db.VarChar(5)
+  closeTime String? @db.VarChar(5)
+
+  reservations          Reservation[]
+  deviceDesired         DeviceDesired?
+  deviceReported        DeviceReported?
+  telemetryAggregations TelemetryAggregation[]
+  alerts                Alert[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

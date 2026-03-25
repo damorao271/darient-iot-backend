@@ -90,11 +90,17 @@ The project meets the stated requirements:
 | CRUD Endpoints                     | Places, Spaces, Reservations with full CRUD                            |
 | Pagination                         | page, pageSize, sortBy, sortOrder in Reservations list                 |
 | Documentation                      | README, Swagger                                                        |
-| Docker                             | docker-compose.yml with PostgreSQL and health checks                   |
+| Docker                             | docker-compose.yml with PostgreSQL, Mosquitto and health checks        |
 | Database + ORM                     | PostgreSQL + Prisma                                                    |
 | Architecture                       | NestJS modular structure                                               |
 | Authentication                     | API key in headers (x-api-key), ApiKeyGuard                            |
 | Tests                              | Unit tests (e.g. interval.utils, week.utils, time.utils) and E2E tests |
+| **IoT Bonus – MQTT subscriber**    | `IotModule` subscribes to `sites/+/offices/+/telemetry` and `reported` |
+| **IoT Bonus – Digital Twin**       | `DeviceDesired` / `DeviceReported` tables; PATCH publishes retained MQTT desired msg |
+| **IoT Bonus – Telemetry store**    | `TelemetryAggregation` persists every reading; last-hour stats endpoint |
+| **IoT Bonus – Alert rules**        | In-memory window engine for CO2, OCCUPANCY_MAX, OCCUPANCY_UNEXPECTED   |
+| **IoT Bonus – WebSocket**          | Socket.io gateway emits `telemetry`, `alert:opened`, `alert:resolved`, `reported` |
+| **IoT Bonus – Admin REST**         | `GET/PATCH /spaces/:id/telemetry`, `/alerts`, `/device`, `/device/desired` |
 
 ## 3. How AI Was Used (Productivity Role)
 

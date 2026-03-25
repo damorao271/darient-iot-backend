@@ -142,7 +142,7 @@ export class ReservationsService {
     const pageSize = Math.min(100, Math.max(1, query?.pageSize ?? 10));
     const skip = (page - 1) * pageSize;
     const sortBy = query?.sortBy ?? 'startAt';
-    const sortOrder = query?.sortOrder ?? 'desc';
+    const sortOrder = query?.sortOrder ?? 'asc';
 
     const where: Prisma.ReservationWhereInput = {};
     if (query?.spaceId) where.spaceId = query.spaceId;

@@ -8,7 +8,7 @@ const ReservationsQuerySchema = z
     page: z.coerce.number().int().positive().default(1),
     pageSize: z.coerce.number().int().positive().max(100).default(10),
     sortBy: z.enum(['startAt', 'createdAt', 'clientEmail']).default('startAt'),
-    sortOrder: z.enum(['asc', 'desc']).default('desc'),
+    sortOrder: z.enum(['asc', 'desc']).default('asc'),
     spaceId: z.string().cuid().optional(),
     placeId: z.string().cuid().optional(),
     clientEmail: z

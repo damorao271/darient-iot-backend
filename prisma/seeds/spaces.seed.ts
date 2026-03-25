@@ -52,6 +52,15 @@ const SPACES_BY_PLACE: Record<
     { name: 'Main Conference', reference: 'MC-01', capacity: 20, description: 'Main conference room' },
     { name: 'Hot Desk Zone', reference: 'HD-01', capacity: 25, description: 'Hot desking area' },
   ],
+  'Las Mercedes Branch': [
+    { name: 'Meeting Room A', reference: 'MRA-01', capacity: 8, description: 'Branch meeting room' },
+    { name: 'Meeting Room B', reference: 'MRB-02', capacity: 4, description: 'Small meeting room' },
+    { name: 'Work Area', reference: 'WA-01', capacity: 12, description: 'Shared work area' },
+  ],
+  'Altamira Office': [
+    { name: 'Main Conference', reference: 'MC-01', capacity: 20, description: 'Main conference room' },
+    { name: 'Hot Desk Zone', reference: 'HD-01', capacity: 25, description: 'Hot desking area' },
+  ],
 };
 
 export async function seedSpaces(prisma: PrismaClient): Promise<void> {

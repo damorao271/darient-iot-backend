@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { addResponseSchemas } from './common/swagger/schemas';
@@ -8,6 +9,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.enableCors(getCorsConfig());
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
