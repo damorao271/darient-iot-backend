@@ -247,14 +247,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"placeId\": \"{{place_id}}\",\n  \"name\": \"Meeting Room A\",\n  \"reference\": \"MRA-01\",\n  \"capacity\": 10,\n  \"description\": \"Main meeting room with projector\"\n}"
+              "raw": "{\n  \"placeId\": \"{{place_id}}\",\n  \"name\": \"Meeting Room A\",\n  \"reference\": \"MRA-01\",\n  \"capacity\": 10,\n  \"description\": \"Main meeting room with projector\",\n  \"openTime\": \"08:00\",\n  \"closeTime\": \"18:00\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/spaces",
               "host": ["{{base_url}}"],
               "path": ["spaces"]
             },
-            "description": "Create a new space. Required: placeId (CUID), name, capacity. Optional: reference, description"
+            "description": "Create a new space. Required: placeId (CUID), name, capacity. Optional: reference, description, openTime (HH:mm), closeTime (HH:mm). If one of openTime/closeTime is provided both must be set and openTime < closeTime."
           }
         },
         {
@@ -702,6 +702,83 @@
               "path": ["reservations", "{{reservation_id}}"]
             },
             "description": "Delete a reservation"
+          }
+        }
+      ]
+    },
+    {
+      "name": "IoT",
+      "item": [
+        {
+          "name": "Get Telemetry",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-api-key", "value": "{{api_key}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/spaces/{{space_id}}/telemetry?limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["spaces", "{{space_id}}", "telemetry"],
+              "query": [
+                { "key": "limit", "value": "50", "description": "Number of readings to return (1–500, default 50)" }
+              ]
+            },
+            "description": "Returns the latest telemetry readings and stats for a space. Query param: limit (int 1–500, default 50)."
+          }
+        },
+        {
+          "name": "Get Alerts",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-api-key", "value": "{{api_key}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/spaces/{{space_id}}/alerts?status=all&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["spaces", "{{space_id}}", "alerts"],
+              "query": [
+                { "key": "status", "value": "all", "description": "Filter alerts by status: open | all (default all)" },
+                { "key": "limit", "value": "50", "description": "Number of alerts to return (1–200, default 50)" }
+              ]
+            },
+            "description": "Returns alerts for a space. Query params: status (open | all, default all), limit (int 1–200, default 50)."
+          }
+        },
+        {
+          "name": "Get Device Twin",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-api-key", "value": "{{api_key}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/spaces/{{space_id}}/device",
+              "host": ["{{base_url}}"],
+              "path": ["spaces", "{{space_id}}", "device"]
+            },
+            "description": "Returns the device digital twin for a space: desired configuration and last reported state."
+          }
+        },
+        {
+          "name": "Update Desired Config",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "x-api-key", "value": "{{api_key}}", "type": "text" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"co2AlertThreshold\": 1000,\n  \"samplingIntervalSec\": 60\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/spaces/{{space_id}}/device/desired",
+              "host": ["{{base_url}}"],
+              "path": ["spaces", "{{space_id}}", "device", "desired"]
+            },
+            "description": "Update the desired configuration for a space's device and publish the change to MQTT. At least one field required. Fields: co2AlertThreshold (int 400–5000), samplingIntervalSec (int 1–3600)."
           }
         }
       ]

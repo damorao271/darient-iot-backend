@@ -1,0 +1,10 @@
+model DeviceDesired {
+  id                  String   @id @default(cuid())
+  spaceId             String   @unique
+  space               Space    @relation(fields: [spaceId], references: [id])
+  co2AlertThreshold   Int      @default(1000)
+  samplingIntervalSec Int      @default(10)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
